@@ -1,0 +1,8 @@
+# External package imports
+vendor
+
+# Bin executable
+bin
+
+# Configuration
+config.toml
