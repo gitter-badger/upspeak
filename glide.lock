@@ -1,8 +1,14 @@
-hash: 9d58df66ab9b1de69871573400b63726ca7ea0a03625e8b4339955bca2ea22ae
-updated: 2017-11-22T20:25:58.396884013+05:30
+hash: ec17d0d3a54ec4c6121ef38201460203d09ee1cc37332935a1b4784349199a2a
+updated: 2017-11-30T18:32:23.591023255+05:30
 imports:
+- name: github.com/dgrijalva/jwt-go
+  version: dbeaa9332f19a944acb5736b4456cfcc02140e29
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
+- name: github.com/gorilla/rpc
+  version: 22c016f3df3febe0c1f6727598b6389507e03a18
+  subpackages:
+  - json
 - name: github.com/hashicorp/hcl
   version: baeb59c710717b06aac1dbe2270e8192ec593244
   subpackages:
@@ -40,7 +46,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 103ce5cd2042f2fe629c1957abb64ab3e7f50235
 - name: github.com/spf13/viper
-  version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: golang.org/x/crypto
   version: d172538b2cfce0c13cee31e647d0367aa8cd2486
   subpackages:

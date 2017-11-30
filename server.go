@@ -4,6 +4,11 @@ import (
 	"log"
 	_ "net/http/pprof"
 
+	"net/http"
+
+	"github.com/gorilla/rpc"
+	"github.com/gorilla/rpc/json"
+
 	"github.com/spf13/viper"
 )
 
@@ -21,4 +26,8 @@ func init() {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	server := rpc.NewServer()
+	server.RegisterCodec(json.NewCodec(), "application/json")
+	http.Handle("/api/v1", server)
 }

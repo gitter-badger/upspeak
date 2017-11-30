@@ -1,3 +1,10 @@
 package: github.com/applait/upspeak
 import:
+- package: github.com/dgrijalva/jwt-go
+  version: ^3.1.0
+- package: github.com/gorilla/rpc
+  version: ^1.1.0
+  subpackages:
+  - json
 - package: github.com/spf13/viper
+  version: ^1.0.0
