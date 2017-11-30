@@ -33,3 +33,7 @@ jobs:
       - run:
           name: Build project
           command: go build .
+
+      - run:
+          name: Run tests
+          command: go test -v ./...
