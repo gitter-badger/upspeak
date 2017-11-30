@@ -1,7 +1,6 @@
-package token
+package utils
 
 import (
-	"fmt"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -14,11 +13,11 @@ type Claims struct {
 }
 
 // NewUserToken generates a JWT for users and signs with given secret
-func NewUserToken(audience string, username string, secret string) (string, error) {
+func NewUserToken(issuer string, audience string, username string, secret string) (string, error) {
 	claims := Claims{
 		"user",
 		jwt.StandardClaims{
-			Issuer:    fmt.Sprintf("%d", u.ID),
+			Issuer:    issuer,
 			Subject:   username,
 			Audience:  audience,
 			ExpiresAt: time.Now().AddDate(0, 0, 28).Unix(),

@@ -8,3 +8,7 @@ import:
   - json
 - package: github.com/spf13/viper
   version: ^1.0.0
+- package: github.com/google/go-cmp
+  version: ^0.1.0
+  subpackages:
+  - cmp

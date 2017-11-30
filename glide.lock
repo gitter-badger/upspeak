@@ -1,10 +1,17 @@
-hash: ec17d0d3a54ec4c6121ef38201460203d09ee1cc37332935a1b4784349199a2a
-updated: 2017-11-30T18:32:23.591023255+05:30
+hash: 6fce40694e924c1eaa7ee2bdbec009fe26c156bdc54b804f22446700ae13118d
+updated: 2017-11-30T21:50:38.902236348+05:30
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: dbeaa9332f19a944acb5736b4456cfcc02140e29
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
+- name: github.com/google/go-cmp
+  version: 8099a9787ce5dc5984ed879a3bda47dc730a8e97
+  subpackages:
+  - cmp
+  - cmp/internal/diff
+  - cmp/internal/function
+  - cmp/internal/value
 - name: github.com/gorilla/rpc
   version: 22c016f3df3febe0c1f6727598b6389507e03a18
   subpackages:
