@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -9,12 +9,16 @@ function cleanRebuild {
 
 function buildServerRelease {
     echo "Building upspeak server release"
-    CGO_ENABLED=0 GOOS=linux go build -o bin/upspeak -a -ldflags '-extldflags "-static"' .
+    export CGO_ENABLED=0
+    export GOOS=linux
+    go build -o bin/upspeak-rig -a -ldflags '-extldflags "-static"' .
+    go build -o bin/upspeak-migrate -a -ldflags '-extldflags "-static"' ./tools/migrate.go
 }
 
 function buildServerDev {
     echo "Building upspeak server dev"
-    go build -o bin/upspeak .
+    go build -o bin/upspeak-rig .
+    go build -o bin/upspeak-migrate ./tools/migrate.go
 }
 
 function buildDev {
