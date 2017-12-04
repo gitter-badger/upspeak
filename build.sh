@@ -12,13 +12,11 @@ function buildServerRelease {
     export CGO_ENABLED=0
     export GOOS=linux
     go build -o bin/upspeak-rig -a -ldflags '-extldflags "-static"' .
-    go build -o bin/upspeak-migrate -a -ldflags '-extldflags "-static"' ./tools/migrate.go
 }
 
 function buildServerDev {
     echo "Building upspeak server dev"
     go build -o bin/upspeak-rig .
-    go build -o bin/upspeak-migrate ./tools/migrate.go
 }
 
 function buildDev {
