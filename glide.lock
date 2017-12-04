@@ -1,20 +1,10 @@
-hash: 898aa12d6e761c12764bf83cc43d24fa1085ecce99647c38cd59e3a14e12a89c
-updated: 2017-12-02T17:02:47.868205693+05:30
+hash: 6fce40694e924c1eaa7ee2bdbec009fe26c156bdc54b804f22446700ae13118d
+updated: 2017-12-04T09:01:38.7691195+05:30
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: dbeaa9332f19a944acb5736b4456cfcc02140e29
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
-- name: github.com/go-pg/migrations
-  version: 56f220c05c9e11f7ca5b06a232e43eda16ce2cde
-- name: github.com/go-pg/pg
-  version: c7e2c6761abe71210d1952ade6c4d80885d0a395
-  subpackages:
-  - internal
-  - internal/parser
-  - internal/pool
-  - orm
-  - types
 - name: github.com/google/go-cmp
   version: 8099a9787ce5dc5984ed879a3bda47dc730a8e97
   subpackages:
@@ -37,8 +27,6 @@ imports:
   - json/parser
   - json/scanner
   - json/token
-- name: github.com/jinzhu/inflection
-  version: 1c35d901db3da928c72a72d8458480cc9ade058f
 - name: github.com/kr/fs
   version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
