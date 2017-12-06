@@ -1,0 +1,1 @@
+-- We'll be friendly and do nothing here
