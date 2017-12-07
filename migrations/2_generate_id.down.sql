@@ -1,3 +1,3 @@
-drop function default.generate_id;
+drop function public.generate_id(text, integer);
 
-drop sequence default.global_id_seq;
+drop sequence public.global_id_seq;
