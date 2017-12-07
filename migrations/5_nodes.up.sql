@@ -20,7 +20,6 @@ insert into public.node_data_types
 create table nodes (
     id bigint default generate_id() not null primary key,
     author_id bigint not null references public.users (id),
-    team_id bigint references public.teams (id),
     data_type character varying(256) not null references public.node_data_types(id),
     source_node_id bigint references public.nodes (id),
     created_at timestamp with time zone not null,
@@ -31,9 +30,6 @@ create table nodes (
 
 -- Btree index of authors of nodes
 create index node_author_idx on public.nodes using btree (author_id);
-
--- Btree index of teams that nodes belong to
-create index node_team_idx on public.nodes using btree (team_id);
 
 -- Btree index of source nodes to speed up thread lookups
 create index node_source_node_idx on public.nodes using btree (source_node_id);
