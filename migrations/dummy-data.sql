@@ -135,6 +135,36 @@ begin
 end;
 $$;
 
+/**
+ * Add some comment nodes - 500,000 comments
+ */
+do $$
+begin
+    for i in 1..500000 loop
+        with u as (
+            select id as user_id from users where random() < 0.01 limit 1
+        ),
+        ids as (
+            -- Generate IDs before hand for nodes and node_revision
+            select generate_id() as node_id,
+                generate_id('node_revision_seq') as revision_id,
+
+                -- These should be passed from application
+                id as thread_id
+            from threads where random() < 0.01 limit 1
+        ),
+        n as (
+            -- Insert node first
+            insert into nodes (id, author_id, source_node_id, data_type, revision_head, created_at)
+                select node_id, user_id, thread_id, 'markdown', revision_id, now() from ids, u
+        )
+        -- Insert node revision next
+        insert into node_revisions(id, node_id, subject, body, committer_id)
+            select revision_id, node_id, null, lipsum(i % 300), user_id from ids, u;
+    end loop;
+end;
+$$;
+
 drop sequence dummy_insert;
 drop function lipsum(integer);
 
