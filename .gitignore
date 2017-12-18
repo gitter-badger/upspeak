@@ -3,6 +3,7 @@ vendor
 
 # Bin executable
 bin
+upspeak
 
 # Configuration
-config.toml
+devconfig.toml

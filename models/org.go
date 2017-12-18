@@ -1,8 +1,8 @@
 package models
 
 type Org struct {
-}
-
-func (o *Org) Create() {
-
+	Id             int64
+	Slug           string
+	Name           string
+	PrimaryContact int64
 }

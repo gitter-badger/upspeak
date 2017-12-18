@@ -1,8 +1,10 @@
 package models
 
 type Team struct {
-}
-
-func (t *Team) Create() {
-
+	Id          int64
+	Slug        string
+	DisplayName string
+	OrgId       string
+	ParentTeam  int64
+	Permissions JSONB
 }

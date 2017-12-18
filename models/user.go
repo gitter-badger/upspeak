@@ -1,8 +1,12 @@
 package models
 
 type User struct {
-}
-
-func (u *User) Create() {
-
+	Id           int64
+	Username     string
+	Password     string
+	EmailPrimary string
+	CreatedAt    string
+	IsVerified   bool
+	IsActive     bool
+	DisplayName  string
 }

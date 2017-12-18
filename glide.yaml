@@ -1,14 +1,21 @@
 package: github.com/applait/upspeak
 import:
 - package: github.com/dgrijalva/jwt-go
-  version: ^3.1.0
+  version: ~3.1.0
 - package: github.com/gorilla/rpc
-  version: ^1.1.0
+  version: ~1.1.0
   subpackages:
-  - json
+  - v2
+  - v2/json2
+- package: github.com/lib/pq
 - package: github.com/spf13/viper
-  version: ^1.0.0
+  version: ~1.0.0
+- package: github.com/davecgh/go-spew
+  version: ~1.1.0
+  subpackages:
+  - spew
+testImport:
 - package: github.com/google/go-cmp
-  version: ^0.1.0
+  version: ~0.1.0
   subpackages:
   - cmp
