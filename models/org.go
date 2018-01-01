@@ -1,7 +1,7 @@
 package models
 
 type Org struct {
-	Id             int64
+	ID             int64
 	Slug           string
 	Name           string
 	PrimaryContact int64

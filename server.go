@@ -43,9 +43,6 @@ func main() {
 	// RPC Service: Node
 	server.RegisterService(new(rpcService.NodeService), "")
 
-	// RPC Service: Thread
-	server.RegisterService(new(rpcService.ThreadService), "")
-
 	// RPC Service: User
 	server.RegisterService(new(rpcService.UserService), "")
 

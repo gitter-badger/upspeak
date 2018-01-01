@@ -1,18 +1,19 @@
 package models
 
 import (
+	"database/sql"
 	"log"
 	"time"
 )
 
 type GetNodeRevisionSchema struct {
-	NodeId      int64
-	RevisionId  int64
-	CommitterId int64
+	NodeID      int64
+	RevisionID  int64
+	CommitterID int64
 	Username    string
-	DataType    string
-	Subject     string
-	Body        string
+	DataType    sql.NullString
+	Subject     sql.NullString
+	Body        sql.NullString
 	Extra       JSONB
 	CommittedAt time.Time
 }
@@ -34,7 +35,7 @@ order by node_revisions.created_at desc; -- latest first
 
 // GetNodeRevision gets a node revision
 func GetNodeRevision(n *GetNodeRevisionSchema) (*GetNodeRevisionSchema, error) {
-	err := db.QueryRow(getNodeRevisionQuery, n.NodeId).Scan(n.RevisionId, n.CommitterId, n.Username, n.DataType, n.Subject, n.Body, n.Extra, n.CommittedAt)
+	err := db.QueryRow(getNodeRevisionQuery, &n.NodeID).Scan(&n.RevisionID, &n.CommitterID, &n.Username, &n.DataType, &n.Subject, &n.Body, &n.Extra, &n.CommittedAt)
 
 	if err != nil {
 		log.Println(err)
@@ -59,11 +60,11 @@ where node_revisions.node_id = $1
 order by node_revisions.created_at desc; -- latest first`
 
 // GetNodeRevisions gets node revisions
-func GetNodeRevisions(n *GetNodeRevisionSchema) (*GetNodeRevisionSchema, error) {
-	rows, err := db.Query(getNodeRevisionsQuery, n.NodeId)
+func GetNodeRevisions(NodeID int64) ([]*GetNodeRevisionSchema, error) {
+	rows, err := db.Query(getNodeRevisionsQuery, NodeID)
 	if err != nil {
 		log.Println(err)
-		return n, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -71,10 +72,10 @@ func GetNodeRevisions(n *GetNodeRevisionSchema) (*GetNodeRevisionSchema, error) 
 
 	for rows.Next() {
 		nodeRevision := new(GetNodeRevisionSchema)
-		err := rows.Scan(nodeRevision.RevisionId, nodeRevision.CommitterId, nodeRevision.Username, nodeRevision.DataType, nodeRevision.Subject, nodeRevision.Body, nodeRevision.Extra, nodeRevision.CommittedAt)
+		err := rows.Scan(&nodeRevision.RevisionID, &nodeRevision.CommitterID, &nodeRevision.Username, &nodeRevision.DataType, &nodeRevision.Subject, &nodeRevision.Body, &nodeRevision.Extra, &nodeRevision.CommittedAt)
 		if err != nil {
 			log.Println(err)
-			return n, err
+			return nil, err
 		}
 		nodeRevisions = append(nodeRevisions, nodeRevision)
 	}
@@ -82,7 +83,45 @@ func GetNodeRevisions(n *GetNodeRevisionSchema) (*GetNodeRevisionSchema, error) 
 	err = rows.Err()
 	if err != nil {
 		log.Println(err)
+		return nodeRevisions, err
+	}
+	return nodeRevisions, nil
+}
+
+///////////////////////
+// Add node revision //
+///////////////////////
+type AddNodeRevisionSchema struct {
+	NodeID     int64
+	RevisionID int64
+	Subject    string
+	Body       string
+	UserID     int64
+}
+
+var addNodeRevisionQuery = `with rev as (
+  insert into node_revisions
+     (node_id, subject, body, committer_id)
+  values (
+    $1, -- NodeID
+    $2, -- Subject
+    $3, -- Body
+    $4)  -- UserID
+  returning id as rev_id, node_id
+)
+update nodes
+  set revision_head = rev.rev_id
+from rev where nodes.id = rev.node_id
+returning rev.*;`
+
+// GetNodeRevision gets a node revision
+func AddNodeRevision(n *AddNodeRevisionSchema) (*AddNodeRevisionSchema, error) {
+	err := db.QueryRow(getNodeRevisionQuery, &n.NodeID, &n.Subject, &n.Body, &n.UserID).Scan(&n.RevisionID, &n.NodeID)
+
+	if err != nil {
+		log.Println(err)
 		return n, err
 	}
 	return n, nil
+
 }

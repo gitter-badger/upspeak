@@ -1,7 +1,7 @@
 package models
 
 type NodeDataType struct {
-	Id         int64
+	ID         int64
 	IsEditable bool
 	attrs      JSONB
 }

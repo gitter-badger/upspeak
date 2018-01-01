@@ -9,16 +9,16 @@ import (
 // Create comment //
 ////////////////////
 type CreateCommentSchema struct {
-	NodeId      int64
-	RevisionId  int64
+	NodeID      int64
+	RevisionID  int64
 	CreatedAt   time.Time
-	ThreadId    int64
-	InReplyToId int64
+	ThreadID    int64
+	InReplyToID int64
 	DataType    string
 	Subject     string
 	Body        string
 	Extra       JSONB
-	UserId      int64
+	UserID      int64
 }
 
 var createCommentQuery = `with ids as (
@@ -55,7 +55,7 @@ returning node_id, id as rev_id, created_at; -- return the node id, new revision
 
 // CreateComment creates a comment
 func CreateComment(c *CreateCommentSchema) (*CreateCommentSchema, error) {
-	err := db.QueryRow(createCommentQuery, c.ThreadId, c.InReplyToId, c.DataType, c.Subject, c.Body, c.Extra, c.UserId).Scan(c.NodeId, c.RevisionId, c.CreatedAt)
+	err := db.QueryRow(createCommentQuery, &c.ThreadID, &c.InReplyToID, &c.DataType, &c.Subject, &c.Body, &c.Extra, &c.UserID).Scan(&c.NodeID, &c.RevisionID, &c.CreatedAt)
 	if err != nil {
 		log.Println(err)
 		return c, err

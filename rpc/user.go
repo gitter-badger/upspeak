@@ -26,7 +26,7 @@ func (u *UserService) Create(r *http.Request, args *UserCreateArgs, reply *UserR
 // Verify user //
 /////////////////
 type UserVerifyArgs struct {
-	UserId      int64  `json:"user_id"`
+	UserID      int64  `json:"user_id"`
 	VerifyToken string `json:"verify_token"`
 }
 

@@ -1,7 +1,7 @@
 package models
 
 type Team struct {
-	Id          int64
+	ID          int64
 	Slug        string
 	DisplayName string
 	OrgId       string
