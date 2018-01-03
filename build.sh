@@ -2,6 +2,10 @@
 
 set -e
 
+function cleanWebDist {
+    rm -rf bin/web/
+}
+
 function cleanRebuild {
     rm -rf bin/
     mkdir -p bin/
@@ -17,6 +21,22 @@ function buildServerRelease {
 function buildServerDev {
     echo "Building upspeak server dev"
     go build -o bin/upspeak-rig .
+}
+
+function buildWebClientDev {
+    echo "Building web client dev"
+    cleanWebDist
+    cd web/
+    npm run build-dev
+    cd ..
+}
+
+function buildWebClientRelease {
+    echo "Building web client release"
+    cleanWebDist
+    cd web/
+    npm run build
+    cd ..
 }
 
 function buildDev {
@@ -36,8 +56,15 @@ case "$1" in
     "dev")
     buildDev
     ;;
+    "web")
+    buildWebClientRelease
+    ;;
+    "web-dev")
+    buildWebClientDev
+    ;;
     *)
-    echo "Usage: ./build.sh [dev|release|help]"
+    echo "Usage: ./build.sh [dev|release|web|web-dev|help]"
     echo "Binaries are put in './bin/'"
+    echo "Web app is packaged in './bin/web/'"
     ;;
 esac
