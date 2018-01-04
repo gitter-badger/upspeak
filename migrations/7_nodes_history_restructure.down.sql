@@ -10,6 +10,10 @@ alter table public.nodes
     drop column body cascade,
     drop column rich_data cascade;
 
+alter table audit.node_revisions set schema public;
+
+drop schema audit;
+
 alter table public.node_revisions
     -- remove the revision ID because we can use timestamp and node ID to get what we need
     drop constraint node_revisions_pkey;

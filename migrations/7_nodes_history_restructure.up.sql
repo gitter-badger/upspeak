@@ -13,8 +13,14 @@ alter table public.nodes
     -- Remove the revision_head column since we will have the latest data in the same table
     drop column revision_head cascade;
 
+-- Create schema for audit
+create schema audit;
+
+-- Move node_revisions to audit schema
+alter table public.node_revisions set schema audit;
+
 -- Store node_revisions
-alter table public.node_revisions
+alter table audit.node_revisions
     -- remove the revision ID because we can use timestamp and node ID to get what we need
     drop constraint node_revisions_pkey,
     drop column id,
@@ -23,7 +29,7 @@ alter table public.node_revisions
     -- and set new primary key as combination of node_id and timestamp
     add primary key(node_id, created_at);
 
-alter table public.node_revisions
+alter table audit.node_revisions
     -- Rename extra to match new name for nodes
     rename column extra to rich_data;
 
