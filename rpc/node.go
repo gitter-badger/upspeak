@@ -17,21 +17,18 @@ type NodeGetArgs struct {
 }
 
 type NodeGetReply struct {
-	NodeID int64 `json:"node_id"`
+	Node *models.Node `json:"node"`
 }
 
 // Get gets a node
 func (n *NodeService) Get(r *http.Request, args *NodeGetArgs, reply *NodeGetReply) error {
-	node := &models.GetNodeSchema{
-		NodeID: args.NodeID,
-	}
-	node, err := models.GetNode(node)
+	_node, err := models.GetNode(&args.NodeID)
 	if err != nil {
 		log.Println(err)
 	}
 
 	// Generate response
-	reply.NodeID = node.NodeID
+	reply.Node = _node
 	return nil
 }
 
@@ -64,57 +61,63 @@ func (n *NodeService) GetForksOfNode(r *http.Request, args *NodeGetForksOfNodeAr
 //////////////////////////
 // List nodes of thread //
 //////////////////////////
-type NodeListNodesOfThreadArgs struct {
+
+type ThreadNodesArgs struct {
 	ThreadID int64 `json:"thread_id"`
 }
 
-type NodeListNodesOfThreadReply []struct {
-	NodeID int64 `json:"node_id"`
+type ThreadNodesReply struct {
+	ThreadID int64          `json:"thread_id"`
+	Count    int            `json:"count"`
+	Nodes    []*models.Node `json:"nodes"`
 }
 
-func (n *NodeService) ListNodesOfThread(r *http.Request, args *NodeListNodesOfThreadArgs, reply *NodeListNodesOfThreadReply) error {
-	nodes, err := models.GetNodes(args.ThreadID)
+// ThreadNodes lists nodes for a given thread
+func (n *NodeService) ThreadNodes(r *http.Request, args *ThreadNodesArgs, reply *ThreadNodesReply) error {
+	nodes, err := models.GetNodes(&args.ThreadID)
 	if err != nil {
 		log.Println(err)
 	}
 
 	// Generate response
-	reply = new(NodeListNodesOfThreadReply)
-	for i, n := range nodes {
-		(*reply)[i].NodeID = n.NodeID
-	}
-
+	reply.ThreadID = args.ThreadID
+	reply.Count = len(nodes)
+	reply.Nodes = nodes
 	return nil
 }
 
 ///////////////////
 // Create thread //
 ///////////////////
-type NodeCreateThreadArgs struct {
-	TeamID  int64  `json:"team_id"`
-	UserID  int64  `json:"user_id"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+type CreateThreadArgs struct {
+	TeamID   int64             `json:"team_id"`
+	UserID   int64             `json:"user_id"`
+	DataType string            `json:"data_type"`
+	Subject  models.NullString `json:"subject"`
+	Body     models.NullString `json:"body"`
+	RichData models.JSONB      `json:"rich_data"`
 }
 
-type NodeCreateThreadReply struct {
-	NodeID int64 `json:"node_id"`
+type CreateThreadReply struct {
+	ThreadID int64 `json:"thread_id"`
 }
 
-func (n *NodeService) CreateThread(r *http.Request, args *NodeCreateThreadArgs, reply *NodeCreateThreadReply) error {
-	thread := &models.CreateThreadSchema{
-		TeamID:  args.TeamID,
-		UserID:  args.UserID,
-		Subject: args.Subject,
-		Body:    args.Body,
-	}
-
-	thread, err := models.CreateThread(thread)
+func (n *NodeService) CreateThread(r *http.Request, args *CreateThreadArgs, reply *CreateThreadReply) error {
+	threadID, err := models.CreateThread(&models.CreateThreadSchema{
+		TeamID: args.TeamID,
+		UserID: args.UserID,
+		Data: models.NodeData{
+			DataType: args.DataType,
+			Subject:  args.Subject,
+			Body:     args.Body,
+			RichData: args.RichData,
+		},
+	})
 	if err != nil {
 		log.Println(err)
 	}
 
-	reply.NodeID = thread.NodeID
+	reply.ThreadID = threadID
 	return nil
 
 }
