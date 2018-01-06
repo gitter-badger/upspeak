@@ -169,38 +169,42 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 /////////////////
 // Add comment //
 /////////////////
-type NodeAddCommentArgs struct {
-	ThreadID    int64        `json:"thread_id"`
-	InReplyToID int64        `json:"in_reply_to_id"`
-	DataType    string       `json:"data_type"`
-	Subject     string       `json:"subject"`
-	Body        string       `json:"body"`
-	Extra       models.JSONB `json:"extra"`
-	UserID      int64        `json:"user_id"`
+
+type NodeCreateCommentArgs struct {
+	ThreadID    models.NullInt64  `json:"thread_id"`
+	InReplyToID models.NullInt64  `json:"in_reply_to_id"`
+	DataType    string            `json:"data_type"`
+	Subject     models.NullString `json:"subject"`
+	Body        models.NullString `json:"body"`
+	RichData    models.JSONB      `json:"rich_data"`
+	UserID      int64             `json:"user_id"`
 }
 
-type NodeAddCommentReply struct {
-	NodeID int64 `json:"node_id"`
+type NodeCreateCommentReply struct {
+	Comment *models.NodeCreateRes `json:"comment"`
 }
 
-// AddComment adds a comment
-func (n *NodeService) AddComment(r *http.Request, args *NodeAddCommentArgs, reply *NodeAddCommentReply) error {
-	revision := &models.CreateCommentSchema{
-		ThreadID:    args.ThreadID,
-		InReplyToID: args.InReplyToID,
-		DataType:    args.DataType,
-		Subject:     args.Subject,
-		Body:        args.Body,
-		UserID:      args.UserID,
-		Extra:       args.Extra,
-	}
-
-	revision, err := models.CreateComment(revision)
+// CreateComment adds a comment
+func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs, reply *NodeCreateCommentReply) error {
+	c, err := models.CreateComment(&models.Node{
+		ThreadID:  &args.ThreadID,
+		InReplyTo: &args.InReplyToID,
+		Data: models.NodeData{
+			DataType: args.DataType,
+			Subject:  args.Subject,
+			Body:     args.Body,
+			RichData: args.RichData,
+		},
+		Author: models.NodeAuthor{
+			ID: args.UserID,
+		},
+	})
 	if err != nil {
-		log.Println(revision)
+		log.Println(err)
+		return err
 	}
 
-	reply.NodeID = revision.NodeID
+	reply.Comment = c
 	return nil
 }
 

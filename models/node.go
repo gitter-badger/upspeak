@@ -47,6 +47,13 @@ type Thread struct {
 	Attrs       *JSONB     `json:"attrs,omitempty"`
 }
 
+// NodeCreateRes is a standard response for creating different types of nodes
+type NodeCreateRes struct {
+	NodeID    int64      `json:"node_id"`
+	ThreadID  *NullInt64 `json:"thread_id,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+}
+
 ///////////////
 // Functions //
 ///////////////
