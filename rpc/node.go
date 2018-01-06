@@ -39,21 +39,22 @@ type NodeGetForksOfNodeArgs struct {
 	NodeID int64 `json:"node_id"`
 }
 
-type NodeGetForksOfNodeReply []struct {
-	NodeID int64 `json:"node_id"`
+type NodeGetForksOfNodeReply struct {
+	NodeID    int64            `json:"node_id"`
+	ForkCount int              `json:"fork_count"`
+	Forks     []*models.Thread `json:"forks"`
 }
 
 func (n *NodeService) GetForksOfNode(r *http.Request, args *NodeGetForksOfNodeArgs, reply *NodeGetForksOfNodeReply) error {
-	nodes, err := models.GetForksOfNode(args.NodeID)
+	ts, err := models.GetForksOfNode(args.NodeID)
 	if err != nil {
 		log.Println(err)
 	}
 
 	// Generate response
-	reply = new(NodeGetForksOfNodeReply)
-	for i, n := range nodes {
-		(*reply)[i].NodeID = n.NodeID
-	}
+	reply.NodeID = args.NodeID
+	reply.ForkCount = len(ts)
+	reply.Forks = ts
 
 	return nil
 }
