@@ -7,67 +7,65 @@ import (
 )
 
 type NodeRevision struct {
-	NodeID    int64     `json:"node_id"`
-	UpdatedAt time.Time `json:"updated_at"`
-	UpdatedBy int64     `json:"updated_by"`
-	Data      *NodeData `json:"data,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	Committer NodeAuthor `json:"committer"`
+	Data      NodeData   `json:"data,omitempty"`
 }
 
 type GetNodeRevisionSchema struct {
 	NodeID      int64
-	RevisionID  int64
-	CommitterID int64
-	Username    string
-	DataType    sql.NullString
-	Subject     sql.NullString
-	Body        sql.NullString
-	Extra       JSONB
 	CommittedAt time.Time
 }
 
 ///////////////////////
 // Get node revision //
 ///////////////////////
-var getNodeRevisionQuery = `select
-    node_revisions.id as revision_id, node_id,
-    committer_id, users.username, -- User who created the revision
-    data_type, subject, body, extra,
-    node_revisions.created_at as committed_at -- When revision was created
-from node_revisions
-    join nodes on (node_revisions.node_id = nodes.id)
-    join users on (node_revisions.committer_id = users.id)
-where node_revisions.node_id = $1
-order by node_revisions.created_at desc; -- latest first
+var getNodeRevisionQuery = `
+select
+    r.committer_id, users.username,
+    nodes.data_type, r.subject, r.body, r.rich_data,
+    r.created_at
+from audit.node_revisions r
+	join public.nodes on (r.node_id = public.nodes.id)
+    join public.users on (r.committer_id = public.users.id)
+where r.node_id = $1 and r.created_at = $2;
 `
 
 // GetNodeRevision gets a node revision
-func GetNodeRevision(n *GetNodeRevisionSchema) (*GetNodeRevisionSchema, error) {
-	err := db.QueryRow(getNodeRevisionQuery, &n.NodeID).Scan(&n.RevisionID, &n.CommitterID, &n.Username, &n.DataType, &n.Subject, &n.Body, &n.Extra, &n.CommittedAt)
+func GetNodeRevision(n *GetNodeRevisionSchema) (*NodeRevision, error) {
+	r := new(NodeRevision)
+	err := db.QueryRow(getNodeRevisionQuery, &n.NodeID, &n.CommittedAt).Scan(
+		&r.Committer.ID, &r.Committer.Username,
+		&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
+		&r.CreatedAt,
+	)
 
 	if err != nil {
-		log.Println(err)
-		return n, err
+		if err != sql.ErrNoRows {
+			log.Println(err)
+		}
+		return nil, err
 	}
-	return n, nil
-
+	return r, nil
 }
 
 ////////////////////////
 // Get node revisions //
 ////////////////////////
-var getNodeRevisionsQuery = `select
-    node_revisions.id as revision_id, node_id,
-    committer_id, users.username, -- User who created the revision
-    data_type, subject, body, extra,
-    node_revisions.created_at as committed_at -- When revision was created
-from node_revisions
-    join nodes on (node_revisions.node_id = nodes.id)
-    join users on (node_revisions.committer_id = users.id)
-where node_revisions.node_id = $1
-order by node_revisions.created_at desc; -- latest first`
+var getNodeRevisionsQuery = `
+select
+    r.committer_id, users.username,
+    nodes.data_type, r.subject, r.body, r.rich_data,
+    r.created_at
+from audit.node_revisions r
+	join public.nodes on (r.node_id = public.nodes.id)
+    join public.users on (r.committer_id = public.users.id)
+where r.node_id = $1
+order by r.created_at desc; -- latest first
+`
 
 // GetNodeRevisions gets node revisions
-func GetNodeRevisions(NodeID int64) ([]*GetNodeRevisionSchema, error) {
+func GetNodeRevisions(NodeID int64) ([]*NodeRevision, error) {
 	rows, err := db.Query(getNodeRevisionsQuery, NodeID)
 	if err != nil {
 		log.Println(err)
@@ -75,16 +73,19 @@ func GetNodeRevisions(NodeID int64) ([]*GetNodeRevisionSchema, error) {
 	}
 	defer rows.Close()
 
-	nodeRevisions := make([]*GetNodeRevisionSchema, 0)
+	nodeRevisions := make([]*NodeRevision, 0)
 
 	for rows.Next() {
-		nodeRevision := new(GetNodeRevisionSchema)
-		err := rows.Scan(&nodeRevision.RevisionID, &nodeRevision.CommitterID, &nodeRevision.Username, &nodeRevision.DataType, &nodeRevision.Subject, &nodeRevision.Body, &nodeRevision.Extra, &nodeRevision.CommittedAt)
+		r := new(NodeRevision)
+		err := rows.Scan(
+			&r.Committer.ID, &r.Committer.Username,
+			&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
+			&r.CreatedAt,
+		)
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
-		nodeRevisions = append(nodeRevisions, nodeRevision)
+		nodeRevisions = append(nodeRevisions, r)
 	}
 
 	err = rows.Err()
@@ -115,7 +116,7 @@ update nodes set
 	updated_by = $4,
 	updated_at = now()
 where id = $5
-returning id, updated_at;
+returning updated_at;
 `
 
 // NodeAddRevision updates the contents of a node and internally creates a new revision
@@ -124,13 +125,13 @@ func NodeAddRevision(n *NodeAddRevisionSchema) (*NodeRevision, error) {
 	err := db.QueryRow(
 		nodeAddRevisionQuery,
 		&n.Subject, &n.Body, &n.RichData, &n.UpdatedBy, &n.NodeID,
-	).Scan(&r.NodeID, &r.UpdatedAt)
+	).Scan(&r.CreatedAt)
 
 	if err != nil {
 		log.Println(err)
 		return r, err
 	}
-	r.UpdatedBy = n.UpdatedBy
+	r.Committer.ID = n.UpdatedBy
 	return r, nil
 
 }

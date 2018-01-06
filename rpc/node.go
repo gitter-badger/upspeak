@@ -1,8 +1,10 @@
 package rpc
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/applait/upspeak/models"
 )
@@ -212,25 +214,30 @@ func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs
 // Get node revision //
 ///////////////////////
 type NodeGetRevisionArgs struct {
-	NodeID int64 `json:"node_id"`
+	NodeID    int64     `json:"node_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type NodeGetRevisionReply struct {
-	NodeID int64 `json:"node_id"`
+	Revision *models.NodeRevision `json:"revision"`
+	NodeID   int64                `json:"node_id"`
 }
 
 // GetRevision gets a node revision
 func (n *NodeService) GetRevision(r *http.Request, args *NodeGetRevisionArgs, reply *NodeGetRevisionReply) error {
-	node := &models.GetNodeRevisionSchema{
-		NodeID: args.NodeID,
-	}
-	node, err := models.GetNodeRevision(node)
+	rev, err := models.GetNodeRevision(&models.GetNodeRevisionSchema{
+		NodeID:      args.NodeID,
+		CommittedAt: args.CreatedAt,
+	})
 	if err != nil {
-		log.Println(err)
+		if err != sql.ErrNoRows {
+			log.Println(err)
+		}
 	}
 
 	// Generate response
-	reply.NodeID = node.NodeID
+	reply.NodeID = args.NodeID
+	reply.Revision = rev
 	return nil
 }
 
@@ -241,8 +248,9 @@ type NodeGetRevisionsArgs struct {
 	NodeID int64 `json:"node_id"`
 }
 
-type NodeGetRevisionsReply []struct {
-	NodeID int64 `json:"node_id"`
+type NodeGetRevisionsReply struct {
+	NodeID    int64                  `json:"node_id"`
+	Revisions []*models.NodeRevision `json:"revisions"`
 }
 
 // GetRevisions gets revisions of a node
@@ -250,14 +258,12 @@ func (n *NodeService) GetRevisions(r *http.Request, args *NodeGetRevisionsArgs, 
 	revisions, err := models.GetNodeRevisions(args.NodeID)
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 
 	// Generate response
-	reply = new(NodeGetRevisionsReply)
-	for i, n := range revisions {
-		(*reply)[i].NodeID = n.NodeID
-	}
-
+	reply.NodeID = args.NodeID
+	reply.Revisions = revisions
 	return nil
 
 }
