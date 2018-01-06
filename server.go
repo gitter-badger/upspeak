@@ -41,10 +41,10 @@ func main() {
 	server.RegisterCodec(json2.NewCodec(), "application/json")
 
 	// RPC Service: Node
-	server.RegisterService(new(rpcService.NodeService), "")
+	server.RegisterService(new(rpcService.NodeService), "node")
 
 	// RPC Service: User
-	server.RegisterService(new(rpcService.UserService), "")
+	server.RegisterService(new(rpcService.UserService), "user")
 
 	http.Handle("/api/v1", server)
 

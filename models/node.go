@@ -139,14 +139,14 @@ func GetNode(nodeID *int64) (*Node, error) {
 // Get forks of node //
 ///////////////////////
 
-var getForksOfNodeQuery = `select
+var getNodeForksQuery = `select
     id, team_id, permissions, is_open, attrs
 from threads
     where forked_from_node = $1 -- This is the current node ID
 order by id asc;`
 
-func GetForksOfNode(NodeID int64) ([]*Thread, error) {
-	rows, err := db.Query(getForksOfNodeQuery, NodeID)
+func GetNodeForks(NodeID int64) ([]*Thread, error) {
+	rows, err := db.Query(getNodeForksQuery, NodeID)
 	if err != nil {
 		log.Println(err)
 		return nil, err

@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+type NodeRevision struct {
+	NodeID    int64     `json:"node_id"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedBy int64     `json:"updated_by"`
+	Data      *NodeData `json:"data,omitempty"`
+}
+
 type GetNodeRevisionSchema struct {
 	NodeID      int64
 	RevisionID  int64
@@ -88,40 +95,42 @@ func GetNodeRevisions(NodeID int64) ([]*GetNodeRevisionSchema, error) {
 	return nodeRevisions, nil
 }
 
-///////////////////////
-// Add node revision //
-///////////////////////
-type AddNodeRevisionSchema struct {
-	NodeID     int64
-	RevisionID int64
-	Subject    string
-	Body       string
-	UserID     int64
+////////////////////////
+// Edit a node's data //
+////////////////////////
+
+type NodeAddRevisionSchema struct {
+	NodeID    int64
+	UpdatedBy int64
+	Subject   string
+	Body      string
+	RichData  JSONB
 }
 
-var addNodeRevisionQuery = `with rev as (
-  insert into node_revisions
-     (node_id, subject, body, committer_id)
-  values (
-    $1, -- NodeID
-    $2, -- Subject
-    $3, -- Body
-    $4)  -- UserID
-  returning id as rev_id, node_id
-)
-update nodes
-  set revision_head = rev.rev_id
-from rev where nodes.id = rev.node_id
-returning rev.*;`
+var nodeAddRevisionQuery = `
+update nodes set
+	subject = $1,
+	body = $2,
+	rich_data = $3,
+	updated_by = $4,
+	updated_at = now()
+where id = $5
+returning id, updated_at;
+`
 
-// GetNodeRevision gets a node revision
-func AddNodeRevision(n *AddNodeRevisionSchema) (*AddNodeRevisionSchema, error) {
-	err := db.QueryRow(getNodeRevisionQuery, &n.NodeID, &n.Subject, &n.Body, &n.UserID).Scan(&n.RevisionID, &n.NodeID)
+// NodeAddRevision updates the contents of a node and internally creates a new revision
+func NodeAddRevision(n *NodeAddRevisionSchema) (*NodeRevision, error) {
+	r := new(NodeRevision)
+	err := db.QueryRow(
+		nodeAddRevisionQuery,
+		&n.Subject, &n.Body, &n.RichData, &n.UpdatedBy, &n.NodeID,
+	).Scan(&r.NodeID, &r.UpdatedAt)
 
 	if err != nil {
 		log.Println(err)
-		return n, err
+		return r, err
 	}
-	return n, nil
+	r.UpdatedBy = n.UpdatedBy
+	return r, nil
 
 }
