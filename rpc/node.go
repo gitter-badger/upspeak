@@ -328,28 +328,39 @@ func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInATh
 // Fork node //
 ///////////////
 type NodeForkNodeArgs struct {
-	TeamID     int64  `json:"team_id"`
-	UserID     int64  `json:"user_id"`
-	Subject    string `json:"subject"`
-	Body       string `json:"body"`
-	ForkedFrom int64  `json:"forked_from"`
+	ForkedFrom int64         `json:"forked_from"`
+	TeamID     int64         `json:"team_id"`
+	UserID     int64         `json:"user_id"`
+	Subject    *string       `json:"subject"`
+	Body       *string       `json:"body"`
+	RichData   *models.JSONB `json:"rich_data"`
 }
 
 type NodeForkNodeReply struct {
-	NodeID int64 `json:"node_id"`
+	ForkThreadID int64 `json:"fork_thread_id"`
+	ForkedFrom   int64 `json:"forked_from"`
 }
 
-// ForkNode creates a new thread from current node
-func (n *NodeService) ForkNode(r *http.Request, args *NodeForkNodeArgs, reply *NodeForkNodeReply) error {
-	thread := new(models.ForkNodeSchema)
-
-	thread, err := models.ForkNode(args.TeamID, args.UserID, args.Subject, args.Body, args.ForkedFrom)
+// Fork creates a new thread from current node
+func (n *NodeService) Fork(r *http.Request, args *NodeForkNodeArgs, reply *NodeForkNodeReply) error {
+	threadID, err := models.ForkNode(&models.ForkNodeReq{
+		SourceNodeID: args.ForkedFrom,
+		TargetTeamID: args.TeamID,
+		QuotedData: &models.NodeData{
+			Subject:  args.Subject,
+			Body:     args.Body,
+			RichData: args.RichData,
+		},
+		UserID: args.UserID,
+	})
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 
 	// Generate response
-	reply.NodeID = thread.NodeID
+	reply.ForkThreadID = threadID
+	reply.ForkedFrom = args.ForkedFrom
 	return nil
 }
 

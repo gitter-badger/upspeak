@@ -331,51 +331,41 @@ func GetForksInAThread(ThreadID int64) ([]*GetForksInAThreadSchema, error) {
 // Fork node //
 ///////////////
 
-type ForkNodeSchema struct {
-	NodeID     int64
-	RevisionID int64
-	TeamID     int64
-	UserID     int64
-	CreatedAt  time.Time
+// ForkNodeReq defines the input type for ForkNode
+type ForkNodeReq struct {
+	SourceNodeID int64
+	TargetTeamID int64
+	QuotedData   *NodeData
+	UserID       int64
 }
 
-var forkNodeQuery = `with ids as (
-    -- Generate IDs before hand for nodes and node_revision
-    select generate_id() as node_id,
-        generate_id('node_revision_seq') as revision_id,
-
-        -- These should be passed from application
-        $1 as team_id, -- TeamID
-        $2 as user_id -- UserID
+var forkNodeQuery = `
+-- Insert node first
+with src as (
+	select data_type from nodes where id = $1
 ),
 n as (
-    -- Insert node first
-    insert into nodes (id, author_id, data_type, revision_head, created_at)
-        select node_id, user_id, 'markdown', revision_id, now() from ids
-        returning created_at
-),
-rev as (
-    -- Insert node revision next
-    insert into node_revisions(id, node_id, subject, body, committer_id)
-        -- :subject and :body should be set only if there is any new content added
-        select revision_id, node_id, $3, $4, user_id from ids
-), -- Subject and Body
-thread as (
-    -- insert thread
-    insert into threads(id, team_id, forked_from_node)
-        -- set :forked_from to node ID of original node that is being forked
-        select node_id, team_id, $5 from ids -- ForkedFromID
+    insert into nodes (author_id, data_type, subject, body, rich_data, created_at)
+        select $2, data_type, $3, $4, $5, now() from src
+        returning id as node_id
 )
--- return the result
-select ids.*, n.* from ids, n;`
+-- insert thread
+insert into threads(id, team_id, forked_from_node)
+	select node_id, $6, $1 from n
+	returning id as thread_id;
+`
 
-// ForkNode forks a node into a thread
-func ForkNode(TeamID int64, UserID int64, Subject string, Body string, ForkedFrom int64) (*ForkNodeSchema, error) {
-	thread := new(ForkNodeSchema)
-	err := db.QueryRow(forkNodeQuery, TeamID, UserID, Subject, Body, ForkedFrom).Scan(&thread.NodeID, &thread.RevisionID, &thread.TeamID, &thread.UserID, &thread.CreatedAt)
+// ForkNode forks a node into a thread and returns the new thread ID
+func ForkNode(f *ForkNodeReq) (int64, error) {
+	var threadID int64
+	err := db.QueryRow(forkNodeQuery,
+		f.SourceNodeID, f.UserID,
+		f.QuotedData.Subject, f.QuotedData.Body, f.QuotedData.RichData,
+		f.TargetTeamID,
+	).Scan(&threadID)
 	if err != nil {
 		log.Println(err)
-		return thread, err
+		return threadID, err
 	}
-	return thread, nil
+	return threadID, nil
 }
