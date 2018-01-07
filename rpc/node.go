@@ -103,8 +103,8 @@ func (n *NodeService) GetNodes(r *http.Request, args *GetNodesArgs, reply *GetNo
 ///////////////////
 
 type CreateThreadArgs struct {
-	TeamID   int64         `json:"team_id"`
-	UserID   int64         `json:"user_id"`
+	TeamID   *int64        `json:"team_id"`
+	AuthorID *int64        `json:"author_id"`
 	DataType *string       `json:"data_type"`
 	Subject  *string       `json:"subject"`
 	Body     *string       `json:"body"`
@@ -116,16 +116,13 @@ type CreateThreadReply struct {
 }
 
 func (n *NodeService) CreateThread(r *http.Request, args *CreateThreadArgs, reply *CreateThreadReply) error {
-	threadID, err := models.CreateThread(&models.CreateThreadSchema{
-		TeamID: args.TeamID,
-		UserID: args.UserID,
-		Data: models.NodeData{
-			DataType: args.DataType,
-			Subject:  args.Subject,
-			Body:     args.Body,
-			RichData: args.RichData,
-		},
-	})
+	data := &models.NodeData{
+		DataType: args.DataType,
+		Subject:  args.Subject,
+		Body:     args.Body,
+		RichData: args.RichData,
+	}
+	threadID, err := models.CreateThread(data, args.TeamID, args.AuthorID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -139,31 +136,32 @@ func (n *NodeService) CreateThread(r *http.Request, args *CreateThreadArgs, repl
 // Edit node  //
 ////////////////
 type NodeEditArgs struct {
-	NodeID   int64        `json:"node_id"`
-	UserID   int64        `json:"user_id"`
-	Subject  string       `json:"subject"`
-	Body     string       `json:"body"`
-	RichData models.JSONB `json:"rich_data"`
+	NodeID   *int64        `json:"node_id"`
+	AuthorID *int64        `json:"author_id"`
+	Subject  *string       `json:"subject"`
+	Body     *string       `json:"body"`
+	RichData *models.JSONB `json:"rich_data"`
 }
 
 type NodeEditReply struct {
+	NodeID   *int64               `json:"node_id"`
 	Revision *models.NodeRevision `json:"revision"`
 }
 
 // Edit creates a node revision
 func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditReply) error {
-	rev, err := models.NodeAddRevision(&models.NodeAddRevisionSchema{
-		NodeID:    args.NodeID,
-		UpdatedBy: args.UserID,
-		Subject:   &args.Subject,
-		Body:      &args.Body,
-		RichData:  &args.RichData,
-	})
+	data := &models.NodeData{
+		Subject:  args.Subject,
+		Body:     args.Body,
+		RichData: args.RichData,
+	}
+	rev, err := models.NodeAddRevision(args.NodeID, args.AuthorID, data)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
+	reply.NodeID = args.NodeID
 	reply.Revision = rev
 	return nil
 }
@@ -173,63 +171,54 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 /////////////////
 
 type NodeCreateCommentArgs struct {
-	ThreadID    int64         `json:"thread_id"`
+	ThreadID    *int64        `json:"thread_id"`
 	InReplyToID *int64        `json:"in_reply_to_id"`
 	DataType    *string       `json:"data_type"`
 	Subject     *string       `json:"subject"`
 	Body        *string       `json:"body"`
 	RichData    *models.JSONB `json:"rich_data"`
-	UserID      *int64        `json:"user_id"`
+	AuthorID    *int64        `json:"author_id"`
 }
 
 type NodeCreateCommentReply struct {
-	Comment *models.NodeCreateRes `json:"comment"`
+	NodeID int64 `json:"node_id"`
 }
 
 // CreateComment adds a comment
 func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs, reply *NodeCreateCommentReply) error {
-	log.Println(args.InReplyToID)
-	c, err := models.CreateComment(&models.Node{
-		ThreadID:  &args.ThreadID,
-		InReplyTo: args.InReplyToID,
-		Data: &models.NodeData{
-			DataType: args.DataType,
-			Subject:  args.Subject,
-			Body:     args.Body,
-			RichData: args.RichData,
-		},
-		Author: &models.NodeAuthor{
-			ID: args.UserID,
-		},
-	})
+	data := &models.NodeData{
+		DataType: args.DataType,
+		Subject:  args.Subject,
+		Body:     args.Body,
+		RichData: args.RichData,
+	}
+	nid, err := models.CreateComment(data, args.ThreadID, args.AuthorID, args.InReplyToID)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	reply.Comment = c
+	reply.NodeID = nid
 	return nil
 }
 
 ///////////////////////
 // Get node revision //
 ///////////////////////
+
 type NodeGetRevisionArgs struct {
-	NodeID    int64     `json:"node_id"`
-	CreatedAt time.Time `json:"created_at"`
+	NodeID    *int64     `json:"node_id"`
+	CreatedAt *time.Time `json:"created_at"`
 }
 
 type NodeGetRevisionReply struct {
+	NodeID   *int64               `json:"node_id"`
 	Revision *models.NodeRevision `json:"revision"`
-	NodeID   int64                `json:"node_id"`
 }
 
 // GetRevision gets a node revision
 func (n *NodeService) GetRevision(r *http.Request, args *NodeGetRevisionArgs, reply *NodeGetRevisionReply) error {
-	rev, err := models.GetNodeRevision(&models.GetNodeRevisionSchema{
-		NodeID:      args.NodeID,
-		CommittedAt: args.CreatedAt,
-	})
+	rev, err := models.GetNodeRevision(args.NodeID, args.CreatedAt)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			log.Println(err)
@@ -245,13 +234,15 @@ func (n *NodeService) GetRevision(r *http.Request, args *NodeGetRevisionArgs, re
 ////////////////////////
 // Get node revisions //
 ////////////////////////
+
 type NodeGetRevisionsArgs struct {
-	NodeID int64 `json:"node_id"`
+	NodeID *int64 `json:"node_id"`
 }
 
 type NodeGetRevisionsReply struct {
-	NodeID    int64                  `json:"node_id"`
-	Revisions []*models.NodeRevision `json:"revisions"`
+	NodeID        *int64                 `json:"node_id"`
+	RevisionCount int                    `json:"revision_count"`
+	Revisions     []*models.NodeRevision `json:"revisions"`
 }
 
 // GetRevisions gets revisions of a node
@@ -264,6 +255,7 @@ func (n *NodeService) GetRevisions(r *http.Request, args *NodeGetRevisionsArgs, 
 
 	// Generate response
 	reply.NodeID = args.NodeID
+	reply.RevisionCount = len(revisions)
 	reply.Revisions = revisions
 	return nil
 
@@ -301,6 +293,7 @@ func (n *NodeService) GetReplies(r *http.Request, args *NodeGetRepliesArgs, repl
 ///////////////////////////
 // Get forks in a thread //
 ///////////////////////////
+
 type NodeGetForksInAThreadArgs struct {
 	ThreadID int64 `json:"thread_id"`
 }
@@ -311,6 +304,7 @@ type NodeGetForksInAThreadReply struct {
 	Forks     []*models.Thread `json:"forks"`
 }
 
+// GetForksInThread returns list of forks of all nodes in the thread
 func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInAThreadArgs, reply *NodeGetForksInAThreadReply) error {
 	forks, err := models.GetForksInAThread(args.ThreadID)
 	if err != nil {
@@ -327,40 +321,37 @@ func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInATh
 ///////////////
 // Fork node //
 ///////////////
+
 type NodeForkNodeArgs struct {
-	ForkedFrom int64         `json:"forked_from"`
-	TeamID     int64         `json:"team_id"`
-	UserID     int64         `json:"user_id"`
-	Subject    *string       `json:"subject"`
-	Body       *string       `json:"body"`
-	RichData   *models.JSONB `json:"rich_data"`
+	NodeID   *int64        `json:"node_id"`
+	TeamID   *int64        `json:"team_id"`
+	AuthorID *int64        `json:"author_id"`
+	Subject  *string       `json:"subject"`
+	Body     *string       `json:"body"`
+	RichData *models.JSONB `json:"rich_data"`
 }
 
 type NodeForkNodeReply struct {
-	ForkThreadID int64 `json:"fork_thread_id"`
-	ForkedFrom   int64 `json:"forked_from"`
+	ForkedThreadID *int64 `json:"forked_thread_id"`
+	ForkedFrom     *int64 `json:"forked_from"`
 }
 
 // Fork creates a new thread from current node
 func (n *NodeService) Fork(r *http.Request, args *NodeForkNodeArgs, reply *NodeForkNodeReply) error {
-	threadID, err := models.ForkNode(&models.ForkNodeReq{
-		SourceNodeID: args.ForkedFrom,
-		TargetTeamID: args.TeamID,
-		QuotedData: &models.NodeData{
-			Subject:  args.Subject,
-			Body:     args.Body,
-			RichData: args.RichData,
-		},
-		UserID: args.UserID,
-	})
+	quotedData := &models.NodeData{
+		Subject:  args.Subject,
+		Body:     args.Body,
+		RichData: args.RichData,
+	}
+	threadID, err := models.ForkNode(args.NodeID, args.TeamID, args.AuthorID, quotedData)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	// Generate response
-	reply.ForkThreadID = threadID
-	reply.ForkedFrom = args.ForkedFrom
+	reply.ForkedThreadID = &threadID
+	reply.ForkedFrom = args.NodeID
 	return nil
 }
 

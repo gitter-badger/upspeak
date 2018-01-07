@@ -57,13 +57,14 @@ type NodeRevision struct {
 	// Time when the revision was created
 	CreatedAt time.Time `json:"created_at"`
 	// User who created the revision
-	Committer NodeAuthor `json:"committer"`
+	Author *NodeAuthor `json:"author"`
 	// Data at this revision
 	Data *NodeData `json:"data,omitempty"`
 }
 
 func newNodeRevision() *NodeRevision {
 	r := new(NodeRevision)
+	r.Author = new(NodeAuthor)
 	r.Data = new(NodeData)
 	return r
 }
@@ -71,7 +72,7 @@ func newNodeRevision() *NodeRevision {
 // Node represents a single node structure
 type Node struct {
 	// Node ID
-	NodeID int64 `json:"node_id"`
+	NodeID *int64 `json:"node_id"`
 	// Metadata information for the node
 	Meta *NodeMeta `json:"meta,omitempty"`
 	// Details of the thread this node belongs to
@@ -85,7 +86,7 @@ type Node struct {
 	// Threads that have been forked from this node
 	Forks []*Thread `json:"forks,omitempty"`
 	// Revisions of the node
-	Revisions []*NodeRevision
+	Revisions []*NodeRevision `json:"revisions,omitempty"`
 }
 
 // newNode returns an empty `Node` type which can be used to fill data

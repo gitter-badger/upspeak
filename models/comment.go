@@ -16,20 +16,20 @@ insert into nodes
         created_at
     )
 values ($1, $2, $3, $4, $5, $6, $7, now())
-returning id, created_at;
+returning id;
 `
 
-// CreateComment creates a comment
-func CreateComment(c *Node) (*NodeCreateRes, error) {
-	res := new(NodeCreateRes)
+// CreateComment creates a comment and returns the new node ID
+func CreateComment(data *NodeData, threadID *int64, authorID *int64, inReplyToID *int64) (int64, error) {
+	var nodeID int64
 	err := db.QueryRow(
 		createCommentQuery,
-		c.Author.ID, c.ThreadID, c.InReplyTo, c.Data.DataType, c.Data.Subject, c.Data.Body, c.Data.RichData,
-	).Scan(&res.NodeID, &res.CreatedAt)
+		authorID, threadID, inReplyToID,
+		data.DataType, data.Subject, data.Body, data.RichData,
+	).Scan(&nodeID)
 	if err != nil {
 		log.Println(err)
-		return res, err
+		return nodeID, err
 	}
-	res.ThreadID = c.ThreadID
-	return res, nil
+	return nodeID, nil
 }

@@ -2,69 +2,7 @@ package models
 
 import (
 	"log"
-	"time"
 )
-
-///////////////////////
-// Type declarations //
-///////////////////////
-
-// NodeAuthor represents author of a specific node or its edits
-type NodeAuthor struct {
-	ID       *int64  `json:"id"`
-	Username *string `json:"username,omitempty"`
-}
-
-// NodeData holds the content for a node
-type NodeData struct {
-	DataType *string `json:"data_type"`
-	Subject  *string `json:"subject"`
-	Body     *string `json:"body"`
-	RichData *JSONB  `json:"rich_data"`
-}
-
-// Node represents a single node structure
-type Node struct {
-	ID        int64       `json:"id"`
-	ThreadID  *int64      `json:"thread_id,omitempty"`
-	Author    *NodeAuthor `json:"author"`
-	Data      *NodeData   `json:"data"`
-	CreatedAt *time.Time  `json:"created_at"`
-	UpdatedAt *time.Time  `json:"updated_at,omitempty"`
-	UpdatedBy *int64      `json:"updated_by,omitempty"`
-	InReplyTo *int64      `json:"in_reply_to,omitempty"`
-}
-
-// newNode returns an empty `Node` type which can be used to fill data
-func newNode() *Node {
-	n := new(Node)
-	n.Author = new(NodeAuthor)
-	n.Data = new(NodeData)
-	return n
-}
-
-// Thread holds a list of nodes and some of its metadata
-type Thread struct {
-	ThreadID    *int64  `json:"thread_id,omitempty"`
-	ForkedFrom  *int64  `json:"forked_from,omitempty"`
-	TeamID      *int64  `json:"team_id,omitempty"`
-	SourceNode  *Node   `json:"source_node,omitempty"`
-	ChildNodes  []*Node `json:"child_nodes,omitempty"`
-	IsOpen      *bool   `json:"is_open,omitempty"`
-	Permissions *JSONB  `json:"permissions,omitempty"`
-	Attrs       *JSONB  `json:"attrs,omitempty"`
-}
-
-// NodeCreateRes is a standard response for creating different types of nodes
-type NodeCreateRes struct {
-	NodeID    int64      `json:"node_id"`
-	ThreadID  *int64     `json:"thread_id,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-}
-
-///////////////
-// Functions //
-///////////////
 
 ///////////////
 // Get nodes //
@@ -96,16 +34,28 @@ func GetNodes(threadID *int64) ([]*Node, error) {
 
 	for rows.Next() {
 		n := newNode()
+		var replyTo *int64
+		var updatedBy *int64
 		err := rows.Scan(
-			&n.ID, &n.InReplyTo,
+			&n.NodeID, &replyTo,
 			&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
-			&n.CreatedAt, &n.Author.ID, &n.Author.Username,
-			&n.UpdatedAt, &n.UpdatedBy,
+			&n.Meta.CreatedAt, &n.Meta.CreatedBy.UserID, &n.Meta.CreatedBy.Username,
+			&n.Meta.UpdatedAt, &updatedBy,
 		)
 
 		if err != nil {
 			log.Println(err)
 			return nil, err
+		}
+		if updatedBy != nil {
+			n.Meta.UpdatedBy = &NodeAuthor{
+				UserID: updatedBy,
+			}
+		}
+		if replyTo != nil {
+			n.InReplyTo = &Node{
+				NodeID: replyTo,
+			}
 		}
 		nodes = append(nodes, n)
 	}
@@ -137,12 +87,35 @@ where nodes.id = $1;
 // GetNode returns a Node given a Node ID
 func GetNode(nodeID *int64) (*Node, error) {
 	n := newNode()
+	var replyTo *int64
+	var threadID *int64
+	var updatedBy *int64
 	err := db.QueryRow(getNodeQuery, nodeID).Scan(
-		&n.ID, &n.ThreadID, &n.InReplyTo,
+		&n.NodeID, &threadID, &replyTo,
 		&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
-		&n.CreatedAt, &n.Author.ID, &n.Author.Username,
-		&n.UpdatedAt, &n.UpdatedBy,
+		&n.Meta.CreatedAt, &n.Meta.CreatedBy.UserID, &n.Meta.CreatedBy.Username,
+		&n.Meta.UpdatedAt, &updatedBy,
 	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	if updatedBy != nil {
+		n.Meta.UpdatedBy = &NodeAuthor{
+			UserID: updatedBy,
+		}
+	}
+	if threadID != nil {
+		n.Thread = &Thread{
+			ThreadID: threadID,
+		}
+	}
+	if replyTo != nil {
+		n.InReplyTo = &Node{
+			NodeID: replyTo,
+		}
+	}
 	if err != nil {
 		log.Println(err)
 		return n, err
@@ -160,6 +133,7 @@ from threads
     where forked_from_node = $1 -- This is the current node ID
 order by id asc;`
 
+// GetNodeForks returns forks of a node
 func GetNodeForks(nodeID int64) ([]*Thread, error) {
 	rows, err := db.Query(getNodeForksQuery, nodeID)
 	if err != nil {
@@ -192,15 +166,6 @@ func GetNodeForks(nodeID int64) ([]*Thread, error) {
 // Create thread //
 ///////////////////
 
-type CreateThreadSchema struct {
-	TeamID     int64
-	UserID     int64
-	Data       NodeData
-	NodeID     int64
-	RevisionID int64
-	CreatedAt  time.Time
-}
-
 var createThreadQuery = `
 -- Insert node first
 with n as (
@@ -215,9 +180,10 @@ insert into threads(id, team_id)
 `
 
 // CreateThread creates a node of type thread
-func CreateThread(t *CreateThreadSchema) (int64, error) {
+func CreateThread(data *NodeData, teamID *int64, authorID *int64) (int64, error) {
 	var threadID int64
-	err := db.QueryRow(createThreadQuery, &t.UserID, &t.Data.DataType, &t.Data.Subject, &t.Data.Body, &t.Data.RichData, &t.TeamID).Scan(&threadID)
+	err := db.QueryRow(createThreadQuery,
+		&authorID, &data.DataType, &data.Subject, &data.Body, &data.RichData, &teamID).Scan(&threadID)
 	if err != nil {
 		log.Println(err)
 		return threadID, err
@@ -254,18 +220,25 @@ func GetReplies(nodeID int64) ([]*Node, error) {
 	replies := make([]*Node, 0)
 
 	for rows.Next() {
-		r := newNode()
+		n := newNode()
+		var replyTo *int64
 		err := rows.Scan(
-			&r.ID,
-			&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
-			&r.CreatedAt, &r.Author.ID, &r.Author.Username,
-			&r.UpdatedAt, &r.UpdatedBy,
+			&n.NodeID, &replyTo,
+			&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
+			&n.Meta.CreatedAt, &n.Meta.CreatedBy.UserID, &n.Meta.CreatedBy.Username,
+			&n.Meta.UpdatedAt, &n.Meta.UpdatedBy.UserID,
 		)
+
 		if err != nil {
 			log.Println(err)
 			return nil, err
 		}
-		replies = append(replies, r)
+		if replyTo != nil {
+			n.InReplyTo = &Node{
+				NodeID: replyTo,
+			}
+		}
+		replies = append(replies, n)
 	}
 
 	err = rows.Err()
@@ -291,6 +264,7 @@ from threads
     )
 order by forked_from_node, id;`
 
+// GetForksInAThread returns list of all forks of all nodes in a thread
 func GetForksInAThread(threadID int64) ([]*Thread, error) {
 	rows, err := db.Query(getForksInAThreadQuery, threadID)
 	defer rows.Close()
@@ -324,14 +298,6 @@ func GetForksInAThread(threadID int64) ([]*Thread, error) {
 // Fork node //
 ///////////////
 
-// ForkNodeReq defines the input type for ForkNode
-type ForkNodeReq struct {
-	SourceNodeID int64
-	TargetTeamID int64
-	QuotedData   *NodeData
-	UserID       int64
-}
-
 var forkNodeQuery = `
 -- Insert node first
 with src as (
@@ -349,12 +315,12 @@ insert into threads(id, team_id, forked_from_node)
 `
 
 // ForkNode forks a node into a thread and returns the new thread ID
-func ForkNode(f *ForkNodeReq) (int64, error) {
+func ForkNode(srcNodeID *int64, targetTeamID *int64, authorID *int64, quotedData *NodeData) (int64, error) {
 	var threadID int64
 	err := db.QueryRow(forkNodeQuery,
-		f.SourceNodeID, f.UserID,
-		f.QuotedData.Subject, f.QuotedData.Body, f.QuotedData.RichData,
-		f.TargetTeamID,
+		srcNodeID, authorID,
+		quotedData.Subject, quotedData.Body, quotedData.RichData,
+		targetTeamID,
 	).Scan(&threadID)
 	if err != nil {
 		log.Println(err)
