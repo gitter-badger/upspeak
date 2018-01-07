@@ -103,12 +103,12 @@ func (n *NodeService) GetNodes(r *http.Request, args *GetNodesArgs, reply *GetNo
 ///////////////////
 
 type CreateThreadArgs struct {
-	TeamID   int64             `json:"team_id"`
-	UserID   int64             `json:"user_id"`
-	DataType string            `json:"data_type"`
-	Subject  models.NullString `json:"subject"`
-	Body     models.NullString `json:"body"`
-	RichData models.JSONB      `json:"rich_data"`
+	TeamID   int64         `json:"team_id"`
+	UserID   int64         `json:"user_id"`
+	DataType *string       `json:"data_type"`
+	Subject  *string       `json:"subject"`
+	Body     *string       `json:"body"`
+	RichData *models.JSONB `json:"rich_data"`
 }
 
 type CreateThreadReply struct {
@@ -155,9 +155,9 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 	rev, err := models.NodeAddRevision(&models.NodeAddRevisionSchema{
 		NodeID:    args.NodeID,
 		UpdatedBy: args.UserID,
-		Subject:   args.Subject,
-		Body:      args.Body,
-		RichData:  args.RichData,
+		Subject:   &args.Subject,
+		Body:      &args.Body,
+		RichData:  &args.RichData,
 	})
 	if err != nil {
 		log.Println(err)
@@ -173,13 +173,13 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 /////////////////
 
 type NodeCreateCommentArgs struct {
-	ThreadID    models.NullInt64  `json:"thread_id"`
-	InReplyToID *int64            `json:"in_reply_to_id"`
-	DataType    string            `json:"data_type"`
-	Subject     models.NullString `json:"subject"`
-	Body        models.NullString `json:"body"`
-	RichData    models.JSONB      `json:"rich_data"`
-	UserID      int64             `json:"user_id"`
+	ThreadID    int64         `json:"thread_id"`
+	InReplyToID *int64        `json:"in_reply_to_id"`
+	DataType    *string       `json:"data_type"`
+	Subject     *string       `json:"subject"`
+	Body        *string       `json:"body"`
+	RichData    *models.JSONB `json:"rich_data"`
+	UserID      *int64        `json:"user_id"`
 }
 
 type NodeCreateCommentReply struct {
@@ -192,13 +192,13 @@ func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs
 	c, err := models.CreateComment(&models.Node{
 		ThreadID:  &args.ThreadID,
 		InReplyTo: args.InReplyToID,
-		Data: models.NodeData{
+		Data: &models.NodeData{
 			DataType: args.DataType,
 			Subject:  args.Subject,
 			Body:     args.Body,
 			RichData: args.RichData,
 		},
-		Author: models.NodeAuthor{
+		Author: &models.NodeAuthor{
 			ID: args.UserID,
 		},
 	})

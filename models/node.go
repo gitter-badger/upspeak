@@ -11,46 +11,54 @@ import (
 
 // NodeAuthor represents author of a specific node or its edits
 type NodeAuthor struct {
-	ID       int64       `json:"id"`
-	Username *NullString `json:"username,omitempty"`
+	ID       *int64  `json:"id"`
+	Username *string `json:"username,omitempty"`
 }
 
 // NodeData holds the content for a node
 type NodeData struct {
-	DataType string     `json:"data_type"`
-	Subject  NullString `json:"subject"`
-	Body     NullString `json:"body"`
-	RichData JSONB      `json:"rich_data"`
+	DataType *string `json:"data_type"`
+	Subject  *string `json:"subject"`
+	Body     *string `json:"body"`
+	RichData *JSONB  `json:"rich_data"`
 }
 
 // Node represents a single node structure
 type Node struct {
-	ID        int64      `json:"id"`
-	ThreadID  *NullInt64 `json:"thread_id,omitempty"`
-	Author    NodeAuthor `json:"author"`
-	Data      NodeData   `json:"data"`
-	CreatedAt NullTime   `json:"created_at"`
-	UpdatedAt *NullTime  `json:"updated_at,omitempty"`
-	UpdatedBy *NullInt64 `json:"updated_by,omitempty"`
-	InReplyTo *int64     `json:"in_reply_to,omitempty"`
+	ID        int64       `json:"id"`
+	ThreadID  *int64      `json:"thread_id,omitempty"`
+	Author    *NodeAuthor `json:"author"`
+	Data      *NodeData   `json:"data"`
+	CreatedAt *time.Time  `json:"created_at"`
+	UpdatedAt *time.Time  `json:"updated_at,omitempty"`
+	UpdatedBy *int64      `json:"updated_by,omitempty"`
+	InReplyTo *int64      `json:"in_reply_to,omitempty"`
+}
+
+// newNode returns an empty `Node` type which can be used to fill data
+func newNode() *Node {
+	n := new(Node)
+	n.Author = new(NodeAuthor)
+	n.Data = new(NodeData)
+	return n
 }
 
 // Thread holds a list of nodes and some of its metadata
 type Thread struct {
-	ThreadID    *NullInt64 `json:"thread_id,omitempty"`
-	TeamID      *NullInt64 `json:"team_id,omitempty"`
-	SourceNode  *Node      `json:"source_node,omitempty"`
-	ChildNodes  []*Node    `json:"child_nodes,omitempty"`
-	IsOpen      *bool      `json:"is_open,omitempty"`
-	Permissions *JSONB     `json:"permissions,omitempty"`
-	Attrs       *JSONB     `json:"attrs,omitempty"`
+	ThreadID    *int64  `json:"thread_id,omitempty"`
+	TeamID      *int64  `json:"team_id,omitempty"`
+	SourceNode  *Node   `json:"source_node,omitempty"`
+	ChildNodes  []*Node `json:"child_nodes,omitempty"`
+	IsOpen      *bool   `json:"is_open,omitempty"`
+	Permissions *JSONB  `json:"permissions,omitempty"`
+	Attrs       *JSONB  `json:"attrs,omitempty"`
 }
 
 // NodeCreateRes is a standard response for creating different types of nodes
 type NodeCreateRes struct {
 	NodeID    int64      `json:"node_id"`
-	ThreadID  *NullInt64 `json:"thread_id,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
+	ThreadID  *int64     `json:"thread_id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 }
 
 ///////////////
@@ -86,7 +94,7 @@ func GetNodes(threadID *int64) ([]*Node, error) {
 	nodes := make([]*Node, 0)
 
 	for rows.Next() {
-		n := new(Node)
+		n := newNode()
 		err := rows.Scan(
 			&n.ID, &n.InReplyTo,
 			&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
@@ -127,7 +135,7 @@ where nodes.id = $1;
 
 // GetNode returns a Node given a Node ID
 func GetNode(nodeID *int64) (*Node, error) {
-	n := new(Node)
+	n := newNode()
 	err := db.QueryRow(getNodeQuery, nodeID).Scan(
 		&n.ID, &n.ThreadID, &n.InReplyTo,
 		&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
@@ -151,8 +159,8 @@ from threads
     where forked_from_node = $1 -- This is the current node ID
 order by id asc;`
 
-func GetNodeForks(NodeID int64) ([]*Thread, error) {
-	rows, err := db.Query(getNodeForksQuery, NodeID)
+func GetNodeForks(nodeID int64) ([]*Thread, error) {
+	rows, err := db.Query(getNodeForksQuery, nodeID)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -182,6 +190,7 @@ func GetNodeForks(NodeID int64) ([]*Thread, error) {
 ///////////////////
 // Create thread //
 ///////////////////
+
 type CreateThreadSchema struct {
 	TeamID     int64
 	UserID     int64
@@ -244,7 +253,7 @@ func GetReplies(nodeID int64) ([]*Node, error) {
 	replies := make([]*Node, 0)
 
 	for rows.Next() {
-		r := new(Node)
+		r := newNode()
 		err := rows.Scan(
 			&r.ID,
 			&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
@@ -269,6 +278,7 @@ func GetReplies(nodeID int64) ([]*Node, error) {
 ///////////////////////////
 // Get forks in a thread //
 ///////////////////////////
+
 type GetForksInAThreadSchema struct {
 	NodeID      int64
 	ThreadID    int64
@@ -320,6 +330,7 @@ func GetForksInAThread(ThreadID int64) ([]*GetForksInAThreadSchema, error) {
 ///////////////
 // Fork node //
 ///////////////
+
 type ForkNodeSchema struct {
 	NodeID     int64
 	RevisionID int64

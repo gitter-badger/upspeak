@@ -9,7 +9,13 @@ import (
 type NodeRevision struct {
 	CreatedAt time.Time  `json:"created_at"`
 	Committer NodeAuthor `json:"committer"`
-	Data      NodeData   `json:"data,omitempty"`
+	Data      *NodeData  `json:"data,omitempty"`
+}
+
+func newNodeRevision() *NodeRevision {
+	r := new(NodeRevision)
+	r.Data = new(NodeData)
+	return r
 }
 
 type GetNodeRevisionSchema struct {
@@ -33,7 +39,7 @@ where r.node_id = $1 and r.created_at = $2;
 
 // GetNodeRevision gets a node revision
 func GetNodeRevision(n *GetNodeRevisionSchema) (*NodeRevision, error) {
-	r := new(NodeRevision)
+	r := newNodeRevision()
 	err := db.QueryRow(getNodeRevisionQuery, &n.NodeID, &n.CommittedAt).Scan(
 		&r.Committer.ID, &r.Committer.Username,
 		&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
@@ -76,7 +82,7 @@ func GetNodeRevisions(NodeID int64) ([]*NodeRevision, error) {
 	nodeRevisions := make([]*NodeRevision, 0)
 
 	for rows.Next() {
-		r := new(NodeRevision)
+		r := newNodeRevision()
 		err := rows.Scan(
 			&r.Committer.ID, &r.Committer.Username,
 			&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
@@ -103,9 +109,9 @@ func GetNodeRevisions(NodeID int64) ([]*NodeRevision, error) {
 type NodeAddRevisionSchema struct {
 	NodeID    int64
 	UpdatedBy int64
-	Subject   string
-	Body      string
-	RichData  JSONB
+	Subject   *string
+	Body      *string
+	RichData  *JSONB
 }
 
 var nodeAddRevisionQuery = `
@@ -131,7 +137,7 @@ func NodeAddRevision(n *NodeAddRevisionSchema) (*NodeRevision, error) {
 		log.Println(err)
 		return r, err
 	}
-	r.Committer.ID = n.UpdatedBy
+	r.Committer.ID = &n.UpdatedBy
 	return r, nil
 
 }
