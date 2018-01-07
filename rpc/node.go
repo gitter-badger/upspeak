@@ -174,7 +174,7 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 
 type NodeCreateCommentArgs struct {
 	ThreadID    models.NullInt64  `json:"thread_id"`
-	InReplyToID models.NullInt64  `json:"in_reply_to_id"`
+	InReplyToID *int64            `json:"in_reply_to_id"`
 	DataType    string            `json:"data_type"`
 	Subject     models.NullString `json:"subject"`
 	Body        models.NullString `json:"body"`
@@ -188,9 +188,10 @@ type NodeCreateCommentReply struct {
 
 // CreateComment adds a comment
 func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs, reply *NodeCreateCommentReply) error {
+	log.Println(args.InReplyToID)
 	c, err := models.CreateComment(&models.Node{
 		ThreadID:  &args.ThreadID,
-		InReplyTo: &args.InReplyToID,
+		InReplyTo: args.InReplyToID,
 		Data: models.NodeData{
 			DataType: args.DataType,
 			Subject:  args.Subject,
@@ -271,29 +272,30 @@ func (n *NodeService) GetRevisions(r *http.Request, args *NodeGetRevisionsArgs, 
 //////////////////////
 // Get node replies //
 //////////////////////
+
 type NodeGetRepliesArgs struct {
-	ThreadID int64 `json:"thread_id"`
+	NodeID int64 `json:"node_id"`
 }
 
-type NodeGetRepliesReply []struct {
-	NodeID int64 `json:"node_id"`
+type NodeGetRepliesReply struct {
+	NodeID     *int64         `json:"node_id"`
+	ReplyCount int            `json:"reply_count"`
+	Replies    []*models.Node `json:"replies"`
 }
 
 // GetReplies gets replies of a node
 func (n *NodeService) GetReplies(r *http.Request, args *NodeGetRepliesArgs, reply *NodeGetRepliesReply) error {
-	nodeReplies, err := models.GetReplies(args.ThreadID)
+	nodeReplies, err := models.GetReplies(args.NodeID)
 	if err != nil {
 		log.Println(err)
 	}
 
 	// Generate response
-	reply = new(NodeGetRepliesReply)
-	for i, n := range nodeReplies {
-		(*reply)[i].NodeID = n.NodeID
-	}
+	reply.NodeID = &args.NodeID
+	reply.ReplyCount = len(nodeReplies)
+	reply.Replies = nodeReplies
 
 	return nil
-
 }
 
 ///////////////////////////

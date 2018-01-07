@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"log"
 	"time"
 )
@@ -33,7 +32,7 @@ type Node struct {
 	CreatedAt NullTime   `json:"created_at"`
 	UpdatedAt *NullTime  `json:"updated_at,omitempty"`
 	UpdatedBy *NullInt64 `json:"updated_by,omitempty"`
-	InReplyTo *NullInt64 `json:"in_reply_to,omitempty"`
+	InReplyTo *int64     `json:"in_reply_to,omitempty"`
 }
 
 // Thread holds a list of nodes and some of its metadata
@@ -219,67 +218,44 @@ func CreateThread(t *CreateThreadSchema) (int64, error) {
 /////////////////
 // Get replies //
 /////////////////
-type GetRepliesSchema struct {
-	NodeID       int64
-	AuthorID     int64
-	Username     string
-	CommitterID  string
-	DataType     sql.NullString
-	RevisionHead int64
-	Subject      sql.NullString
-	Body         sql.NullString
-	Extra        JSONB
-	CreatedAt    time.Time
-	LastEditedAt time.Time
-}
 
-var getRepliesQuery = `with n as (
-    select id, source_node_id from nodes where id = $1 -- ThreadID
-),
-ns as (
-    select
-        n.id as reply_target,
-        nodes.id, n.source_node_id, in_reply_to, author_id, data_type, revision_head, created_at
-    from nodes, n where nodes.source_node_id = (
-        -- Iterate to figure out the source node of given node.
-        -- If given node is a source node itself, we use its id
-        -- Else, we use the source_node_id for given node.
-        case when n.source_node_id is null then
-            n.id
-        else
-            n.source_node_id
-        end
-    )
-)
+var getRepliesQuery = `
 select
-    node_id, author_id, users.username,
-    committer_id, data_type, revision_head,
-    subject, extra,
-    ns.created_at, rev.created_at as last_edited_at
-from ns
-    join node_revisions rev on (ns.revision_head = rev.id)
-    join users on (ns.author_id = users.id)
-where ns.in_reply_to = ns.reply_target
-order by ns.id asc;`
+	nodes.id,
+	data_type, subject, body, rich_data,
+	nodes.created_at, author_id, users.username,
+	updated_at, updated_by
+from nodes
+    join users on (nodes.author_id = users.id)
+where nodes.in_reply_to = $1
+order by nodes.id asc;
+`
 
-func GetReplies(ThreadID int64) ([]*GetRepliesSchema, error) {
-	rows, err := db.Query(getRepliesQuery, ThreadID)
+// GetReplies lists nodes that were replies made directly to a given node. This
+// is not the same as listing child nodes of a thread.
+func GetReplies(nodeID int64) ([]*Node, error) {
+	rows, err := db.Query(getRepliesQuery, nodeID)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
 
-	replies := make([]*GetRepliesSchema, 0)
+	replies := make([]*Node, 0)
 
 	for rows.Next() {
-		reply := new(GetRepliesSchema)
-		err := rows.Scan(&reply.NodeID, &reply.AuthorID, &reply.Username, &reply.CommitterID, &reply.DataType, &reply.RevisionHead, &reply.Subject, &reply.Body, &reply.Extra, &reply.CreatedAt, &reply.LastEditedAt)
+		r := new(Node)
+		err := rows.Scan(
+			&r.ID,
+			&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
+			&r.CreatedAt, &r.Author.ID, &r.Author.Username,
+			&r.UpdatedAt, &r.UpdatedBy,
+		)
 		if err != nil {
 			log.Println(err)
 			return nil, err
 		}
-		replies = append(replies, reply)
+		replies = append(replies, r)
 	}
 
 	err = rows.Err()
