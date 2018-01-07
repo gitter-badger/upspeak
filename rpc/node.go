@@ -305,8 +305,10 @@ type NodeGetForksInAThreadArgs struct {
 	ThreadID int64 `json:"thread_id"`
 }
 
-type NodeGetForksInAThreadReply []struct {
-	NodeID int64 `json:"node_id"`
+type NodeGetForksInAThreadReply struct {
+	ThreadID  int64            `json:"thread_id"`
+	ForkCount int              `json:"fork_count"`
+	Forks     []*models.Thread `json:"forks"`
 }
 
 func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInAThreadArgs, reply *NodeGetForksInAThreadReply) error {
@@ -316,11 +318,9 @@ func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInATh
 	}
 
 	// Generate response
-	reply = new(NodeGetForksInAThreadReply)
-	for i, n := range forks {
-		(*reply)[i].NodeID = n.NodeID
-	}
-
+	reply.ThreadID = args.ThreadID
+	reply.ForkCount = len(forks)
+	reply.Forks = forks
 	return nil
 }
 

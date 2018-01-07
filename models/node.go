@@ -46,6 +46,7 @@ func newNode() *Node {
 // Thread holds a list of nodes and some of its metadata
 type Thread struct {
 	ThreadID    *int64  `json:"thread_id,omitempty"`
+	ForkedFrom  *int64  `json:"forked_from,omitempty"`
 	TeamID      *int64  `json:"team_id,omitempty"`
 	SourceNode  *Node   `json:"source_node,omitempty"`
 	ChildNodes  []*Node `json:"child_nodes,omitempty"`
@@ -279,39 +280,31 @@ func GetReplies(nodeID int64) ([]*Node, error) {
 // Get forks in a thread //
 ///////////////////////////
 
-type GetForksInAThreadSchema struct {
-	NodeID      int64
-	ThreadID    int64
-	TeamID      int64
-	Permissions JSONB
-	IsOpen      bool
-	Attrs       JSONB
-}
-
 var getForksInAThreadQuery = `select
     forked_from_node as node_id, -- The node which was forked
     id as forked_thread_id, -- The forked thread created
     team_id, permissions, is_open, attrs
 from threads
-    where forked/_from_node in (
+    where forked_from_node in (
         select id from nodes
             where source_node_id = $1 or id = $1 -- ThreadID
     )
 order by forked_from_node, id;`
 
-func GetForksInAThread(ThreadID int64) ([]*GetForksInAThreadSchema, error) {
-	rows, err := db.Query(getForksInAThreadQuery, ThreadID)
+func GetForksInAThread(threadID int64) ([]*Thread, error) {
+	rows, err := db.Query(getForksInAThreadQuery, threadID)
+	defer rows.Close()
+
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	defer rows.Close()
 
-	forks := make([]*GetForksInAThreadSchema, 0)
+	forks := make([]*Thread, 0)
 
 	for rows.Next() {
-		fork := new(GetForksInAThreadSchema)
-		err := rows.Scan(&fork.NodeID, &fork.ThreadID, &fork.Permissions, &fork.IsOpen, &fork.Attrs)
+		fork := new(Thread)
+		err := rows.Scan(&fork.ForkedFrom, &fork.ThreadID, &fork.TeamID, &fork.Permissions, &fork.IsOpen, &fork.Attrs)
 		if err != nil {
 			log.Println(err)
 			return nil, err
