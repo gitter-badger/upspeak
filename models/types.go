@@ -12,73 +12,71 @@
 
 package models
 
-import "time"
-
 // NodeAuthor represents author of a specific node or its edits
 type NodeAuthor struct {
 	// ID of the user
-	UserID *int64 `json:"user_id"`
+	UserID NullInt64 `json:"user_id"`
 	// Username of the user
-	Username *string `json:"username,omitempty"`
+	Username NullString `json:"username,omitempty"`
 }
 
 // NodeData holds the content for a node
 type NodeData struct {
 	// Data type of the node
-	DataType *string `json:"data_type"`
+	DataType NullString `json:"data_type"`
 	// Subject field for the node
-	Subject *string `json:"subject"`
+	Subject NullString `json:"subject"`
 	// Body field for the node
-	Body *string `json:"body"`
+	Body NullString `json:"body"`
 	// RichData field for the node
-	RichData *JSONB `json:"rich_data"`
+	RichData JSONB `json:"rich_data"`
 }
 
 // NodeMeta contains information about node
 type NodeMeta struct {
 	// Time when node was created
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt NullTime `json:"created_at"`
 	// User who created the node
-	CreatedBy *NodeAuthor `json:"author"`
+	CreatedBy NodeAuthor `json:"author"`
 	// Time when node was last updated
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UpdatedAt NullTime `json:"updated_at,omitempty"`
 	// User who last updated the node
-	UpdatedBy *NodeAuthor `json:"updated_by,omitempty"`
+	UpdatedBy NodeAuthor `json:"updated_by,omitempty"`
 }
 
-func newNodeMeta() *NodeMeta {
-	n := new(NodeMeta)
-	n.CreatedBy = new(NodeAuthor)
+func newNodeMeta() NodeMeta {
+	var n NodeMeta
+	n.CreatedBy = NodeAuthor{}
 	return n
 }
 
 // NodeRevision holds information about a specific node revision point
 type NodeRevision struct {
 	// Time when the revision was created
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt NullTime `json:"created_at"`
 	// User who created the revision
-	Author *NodeAuthor `json:"author"`
+	Author NodeAuthor `json:"author"`
 	// Data at this revision
-	Data *NodeData `json:"data,omitempty"`
+	Data NodeData `json:"data,omitempty"`
 }
 
-func newNodeRevision() *NodeRevision {
-	r := new(NodeRevision)
-	r.Author = new(NodeAuthor)
-	r.Data = new(NodeData)
+func newNodeRevision() NodeRevision {
+	var r NodeRevision
+	r.Author = NodeAuthor{}
+	r.Data = NodeData{}
 	return r
 }
 
 // Node represents a single node structure
 type Node struct {
 	// Node ID
-	NodeID *int64 `json:"node_id"`
+	NodeID NullInt64 `json:"node_id"`
 	// Metadata information for the node
-	Meta *NodeMeta `json:"meta,omitempty"`
+	Meta NodeMeta `json:"meta,omitempty"`
 	// Details of the thread this node belongs to
 	Thread *Thread `json:"thread_id,omitempty"`
 	// Node's data
-	Data *NodeData `json:"data,omitempty"`
+	Data NodeData `json:"data,omitempty"`
 	// Node to which this node is a reply
 	InReplyTo *Node `json:"in_reply_to,omitempty"`
 	// Nodes which are replies to this node
@@ -90,31 +88,79 @@ type Node struct {
 }
 
 // newNode returns an empty `Node` type which can be used to fill data
-func newNode() *Node {
-	n := new(Node)
+func newNode() Node {
+	var n Node
 	n.Meta = newNodeMeta()
-	n.Data = new(NodeData)
+	n.Data = NodeData{}
 	return n
 }
 
 // Thread holds a list of nodes and some of its metadata
 type Thread struct {
 	// ID of the thread
-	ThreadID *int64 `json:"thread_id,omitempty"`
+	ThreadID NullInt64 `json:"thread_id,omitempty"`
 	// Node from which this thread was forked
 	ForkedFrom *Node `json:"forked_from,omitempty"`
 	// Team which this node belongs to
-	TeamID *int64 `json:"team_id,omitempty"`
+	TeamID NullInt64 `json:"team_id,omitempty"`
 	// Detail of the source node of this thread
 	SourceNode *Node `json:"source_node,omitempty"`
 	// Comment nodes of the thread
 	ChildNodes []*Node `json:"child_nodes,omitempty"`
 	// Whether the thread is open
-	IsOpen *bool `json:"is_open,omitempty"`
+	IsOpen bool `json:"is_open,omitempty"`
 	// Resolved permissions for this thread
-	Permissions *Permissions `json:"permissions,omitempty"`
+	Permissions Permissions `json:"permissions,omitempty"`
 	// Extended attributes for the thread
-	Attrs *JSONB `json:"attrs,omitempty"`
+	Attrs JSONB `json:"attrs,omitempty"`
+}
+
+// User holds user metadata
+type User struct {
+	// ID of the user
+	UserID NullInt64 `json:"user_id"`
+	// Username of the user
+	Username NullString `json:"username"`
+	// Password of the user
+	Password NullString `json:"password"`
+	// Primary email of the user
+	EmailPrimary NullString `json:"email_primary"`
+	// Time when the user account was created
+	CreatedAt NullTime `json:"created_at"`
+	// Verification status of the user
+	IsVerified bool `json:"is_verified"`
+	// Active status of the user
+	IsActive bool `json:"is_active"`
+	// Display name of the user
+	DisplayName NullString `json:"display_name,omitempty"`
+}
+
+// Team holds team metadata
+type Team struct {
+	// ID of the team
+	TeamID NullInt64 `json:"team_id"`
+	// Unique slug of the team
+	Slug NullString `json:"slug"`
+	// Display name of the team
+	DisplayName NullString `json:"display_name,omitempty"`
+	// ID of the org the team belongs to
+	OrgID NullInt64 `json:"org_id"`
+	// ID of the parent team (if nested)
+	ParentTeam NullInt64 `json:"parent_team,omitempty"`
+	// Resolved permissions for the team
+	Permissions Permissions `json:"permissions,omitempty"`
+}
+
+// Org holds organization metadata
+type Org struct {
+	// ID of the organization
+	OrgID NullInt64 `json:"org_id"`
+	// Unique slug of the organization
+	Slug NullString `json:"slug"`
+	// Display name of the organization
+	DisplayName NullString `json:"display_name"`
+	// Primary contact (user) of the organization
+	PrimaryContact User `json:"primary_contact"`
 }
 
 // AccessLevel holds the type for defining access levels

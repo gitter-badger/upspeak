@@ -22,7 +22,7 @@ where r.node_id = $1 and r.created_at = $2;
 `
 
 // GetNodeRevision gets a node revision using node ID and timestamp of revision
-func GetNodeRevision(nodeID *int64, createdAt *time.Time) (*NodeRevision, error) {
+func GetNodeRevision(nodeID int64, createdAt time.Time) (NodeRevision, error) {
 	r := newNodeRevision()
 	err := db.QueryRow(getNodeRevisionQuery, nodeID, createdAt).Scan(
 		&r.Author.UserID, &r.Author.Username,
@@ -34,7 +34,7 @@ func GetNodeRevision(nodeID *int64, createdAt *time.Time) (*NodeRevision, error)
 		if err != sql.ErrNoRows {
 			log.Println(err)
 		}
-		return nil, err
+		return r, err
 	}
 	return r, nil
 }
@@ -55,7 +55,7 @@ order by r.created_at desc; -- latest first
 `
 
 // GetNodeRevisions gets node revisions
-func GetNodeRevisions(nodeID *int64) ([]*NodeRevision, error) {
+func GetNodeRevisions(nodeID int64) ([]NodeRevision, error) {
 	rows, err := db.Query(getNodeRevisionsQuery, nodeID)
 	if err != nil {
 		log.Println(err)
@@ -63,7 +63,7 @@ func GetNodeRevisions(nodeID *int64) ([]*NodeRevision, error) {
 	}
 	defer rows.Close()
 
-	nodeRevisions := make([]*NodeRevision, 0)
+	nodeRevisions := make([]NodeRevision, 0)
 
 	for rows.Next() {
 		r := newNodeRevision()
@@ -102,8 +102,8 @@ returning updated_at;
 `
 
 // NodeAddRevision updates the contents of a node and internally creates a new revision
-func NodeAddRevision(nodeID *int64, authorID *int64, data *NodeData) (*NodeRevision, error) {
-	r := new(NodeRevision)
+func NodeAddRevision(nodeID NullInt64, authorID NullInt64, data *NodeData) (NodeRevision, error) {
+	r := newNodeRevision()
 	err := db.QueryRow(
 		nodeAddRevisionQuery,
 		&data.Subject, &data.Body, &data.RichData, &authorID, &nodeID,
@@ -113,7 +113,7 @@ func NodeAddRevision(nodeID *int64, authorID *int64, data *NodeData) (*NodeRevis
 		log.Println(err)
 		return r, err
 	}
-	r.Author = &NodeAuthor{
+	r.Author = NodeAuthor{
 		UserID: authorID,
 	}
 	return r, nil

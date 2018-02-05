@@ -22,7 +22,7 @@ order by nodes.id asc;
 `
 
 // GetNodes queries db for multiple nodes based on thread ID
-func GetNodes(threadID *int64) ([]*Node, error) {
+func GetNodes(threadID int64) ([]*Node, error) {
 	rows, err := db.Query(getNodesQuery, threadID)
 	if err != nil {
 		log.Println(err)
@@ -34,8 +34,8 @@ func GetNodes(threadID *int64) ([]*Node, error) {
 
 	for rows.Next() {
 		n := newNode()
-		var replyTo *int64
-		var updatedBy *int64
+		var replyTo NullInt64
+		var updatedBy NullInt64
 		err := rows.Scan(
 			&n.NodeID, &replyTo,
 			&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
@@ -47,17 +47,20 @@ func GetNodes(threadID *int64) ([]*Node, error) {
 			log.Println(err)
 			return nil, err
 		}
-		if updatedBy != nil {
-			n.Meta.UpdatedBy = &NodeAuthor{
+
+		// If updatedBy is `not null` in db
+		if updatedBy.Valid {
+			n.Meta.UpdatedBy = NodeAuthor{
 				UserID: updatedBy,
 			}
 		}
-		if replyTo != nil {
+
+		if replyTo.Valid {
 			n.InReplyTo = &Node{
 				NodeID: replyTo,
 			}
 		}
-		nodes = append(nodes, n)
+		nodes = append(nodes, &n)
 	}
 
 	err = rows.Err()
@@ -85,11 +88,11 @@ where nodes.id = $1;
 `
 
 // GetNode returns a Node given a Node ID
-func GetNode(nodeID *int64) (*Node, error) {
+func GetNode(nodeID *int64) (Node, error) {
 	n := newNode()
-	var replyTo *int64
-	var threadID *int64
-	var updatedBy *int64
+	var replyTo NullInt64
+	var threadID NullInt64
+	var updatedBy NullInt64
 	err := db.QueryRow(getNodeQuery, nodeID).Scan(
 		&n.NodeID, &threadID, &replyTo,
 		&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
@@ -99,19 +102,19 @@ func GetNode(nodeID *int64) (*Node, error) {
 
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return n, err
 	}
-	if updatedBy != nil {
-		n.Meta.UpdatedBy = &NodeAuthor{
+	if updatedBy.Valid {
+		n.Meta.UpdatedBy = NodeAuthor{
 			UserID: updatedBy,
 		}
 	}
-	if threadID != nil {
+	if threadID.Valid {
 		n.Thread = &Thread{
 			ThreadID: threadID,
 		}
 	}
-	if replyTo != nil {
+	if replyTo.Valid {
 		n.InReplyTo = &Node{
 			NodeID: replyTo,
 		}
@@ -221,7 +224,7 @@ func GetReplies(nodeID int64) ([]*Node, error) {
 
 	for rows.Next() {
 		n := newNode()
-		var replyTo *int64
+		var replyTo NullInt64
 		err := rows.Scan(
 			&n.NodeID, &replyTo,
 			&n.Data.DataType, &n.Data.Subject, &n.Data.Body, &n.Data.RichData,
@@ -233,12 +236,12 @@ func GetReplies(nodeID int64) ([]*Node, error) {
 			log.Println(err)
 			return nil, err
 		}
-		if replyTo != nil {
+		if replyTo.Valid {
 			n.InReplyTo = &Node{
 				NodeID: replyTo,
 			}
 		}
-		replies = append(replies, n)
+		replies = append(replies, &n)
 	}
 
 	err = rows.Err()
@@ -315,7 +318,7 @@ insert into threads(id, team_id, forked_from_node)
 `
 
 // ForkNode forks a node into a thread and returns the new thread ID
-func ForkNode(srcNodeID *int64, targetTeamID *int64, authorID *int64, quotedData *NodeData) (int64, error) {
+func ForkNode(srcNodeID int64, targetTeamID int64, authorID int64, quotedData *NodeData) (int64, error) {
 	var threadID int64
 	err := db.QueryRow(forkNodeQuery,
 		srcNodeID, authorID,

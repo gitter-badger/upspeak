@@ -1,5 +1,5 @@
-hash: 617f999197c3e9b1eadca040f875f572c86e7bb56c3445c351835c305c5772cd
-updated: 2017-12-17T21:47:05.960129948+05:30
+hash: 3eb84bc8405270b4adce2fd47abcc258f6cbbf257804c9bdeb8b2615a034f10e
+updated: 2018-01-15T15:09:17.856837597+05:30
 imports:
 - name: github.com/davecgh/go-spew
   version: 346938d642f2ec3594ed81d874461961cd0faa76
@@ -59,6 +59,7 @@ imports:
 - name: golang.org/x/crypto
   version: d172538b2cfce0c13cee31e647d0367aa8cd2486
   subpackages:
+  - bcrypt
   - curve25519
   - ed25519
   - ed25519/internal/edwards25519

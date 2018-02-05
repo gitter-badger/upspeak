@@ -22,7 +22,7 @@ type NodeGetArgs struct {
 
 // NodeGetReply defines the result data type for node.Get
 type NodeGetReply struct {
-	Node *models.Node `json:"node"`
+	Node models.Node `json:"node"`
 }
 
 // Get fetches the contents of a single node given a Node ID
@@ -86,7 +86,7 @@ type GetNodesReply struct {
 
 // GetNodes lists nodes for a given thread
 func (n *NodeService) GetNodes(r *http.Request, args *GetNodesArgs, reply *GetNodesReply) error {
-	nodes, err := models.GetNodes(&args.ThreadID)
+	nodes, err := models.GetNodes(args.ThreadID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -103,12 +103,12 @@ func (n *NodeService) GetNodes(r *http.Request, args *GetNodesArgs, reply *GetNo
 ///////////////////
 
 type CreateThreadArgs struct {
-	TeamID   *int64        `json:"team_id"`
-	AuthorID *int64        `json:"author_id"`
-	DataType *string       `json:"data_type"`
-	Subject  *string       `json:"subject"`
-	Body     *string       `json:"body"`
-	RichData *models.JSONB `json:"rich_data"`
+	TeamID   int64             `json:"team_id"`
+	AuthorID int64             `json:"author_id"`
+	DataType models.NullString `json:"data_type"`
+	Subject  models.NullString `json:"subject"`
+	Body     models.NullString `json:"body"`
+	RichData models.JSONB      `json:"rich_data"`
 }
 
 type CreateThreadReply struct {
@@ -122,7 +122,7 @@ func (n *NodeService) CreateThread(r *http.Request, args *CreateThreadArgs, repl
 		Body:     args.Body,
 		RichData: args.RichData,
 	}
-	threadID, err := models.CreateThread(data, args.TeamID, args.AuthorID)
+	threadID, err := models.CreateThread(data, &args.TeamID, &args.AuthorID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -136,16 +136,16 @@ func (n *NodeService) CreateThread(r *http.Request, args *CreateThreadArgs, repl
 // Edit node  //
 ////////////////
 type NodeEditArgs struct {
-	NodeID   *int64        `json:"node_id"`
-	AuthorID *int64        `json:"author_id"`
-	Subject  *string       `json:"subject"`
-	Body     *string       `json:"body"`
-	RichData *models.JSONB `json:"rich_data"`
+	NodeID   models.NullInt64  `json:"node_id"`
+	AuthorID models.NullInt64  `json:"author_id"`
+	Subject  models.NullString `json:"subject"`
+	Body     models.NullString `json:"body"`
+	RichData models.JSONB      `json:"rich_data"`
 }
 
 type NodeEditReply struct {
-	NodeID   *int64               `json:"node_id"`
-	Revision *models.NodeRevision `json:"revision"`
+	NodeID   models.NullInt64    `json:"node_id"`
+	Revision models.NodeRevision `json:"revision"`
 }
 
 // Edit creates a node revision
@@ -171,13 +171,13 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 /////////////////
 
 type NodeCreateCommentArgs struct {
-	ThreadID    *int64        `json:"thread_id"`
-	InReplyToID *int64        `json:"in_reply_to_id"`
-	DataType    *string       `json:"data_type"`
-	Subject     *string       `json:"subject"`
-	Body        *string       `json:"body"`
-	RichData    *models.JSONB `json:"rich_data"`
-	AuthorID    *int64        `json:"author_id"`
+	ThreadID    int64             `json:"thread_id"`
+	InReplyToID int64             `json:"in_reply_to_id"`
+	DataType    models.NullString `json:"data_type"`
+	Subject     models.NullString `json:"subject"`
+	Body        models.NullString `json:"body"`
+	RichData    models.JSONB      `json:"rich_data"`
+	AuthorID    int64             `json:"author_id"`
 }
 
 type NodeCreateCommentReply struct {
@@ -186,7 +186,7 @@ type NodeCreateCommentReply struct {
 
 // CreateComment adds a comment
 func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs, reply *NodeCreateCommentReply) error {
-	data := &models.NodeData{
+	data := models.NodeData{
 		DataType: args.DataType,
 		Subject:  args.Subject,
 		Body:     args.Body,
@@ -207,13 +207,13 @@ func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs
 ///////////////////////
 
 type NodeGetRevisionArgs struct {
-	NodeID    *int64     `json:"node_id"`
-	CreatedAt *time.Time `json:"created_at"`
+	NodeID    int64     `json:"node_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type NodeGetRevisionReply struct {
-	NodeID   *int64               `json:"node_id"`
-	Revision *models.NodeRevision `json:"revision"`
+	NodeID   int64               `json:"node_id"`
+	Revision models.NodeRevision `json:"revision"`
 }
 
 // GetRevision gets a node revision
@@ -236,13 +236,13 @@ func (n *NodeService) GetRevision(r *http.Request, args *NodeGetRevisionArgs, re
 ////////////////////////
 
 type NodeGetRevisionsArgs struct {
-	NodeID *int64 `json:"node_id"`
+	NodeID int64 `json:"node_id"`
 }
 
 type NodeGetRevisionsReply struct {
-	NodeID        *int64                 `json:"node_id"`
-	RevisionCount int                    `json:"revision_count"`
-	Revisions     []*models.NodeRevision `json:"revisions"`
+	NodeID        int64                 `json:"node_id"`
+	RevisionCount int                   `json:"revision_count"`
+	Revisions     []models.NodeRevision `json:"revisions"`
 }
 
 // GetRevisions gets revisions of a node
@@ -270,7 +270,7 @@ type NodeGetRepliesArgs struct {
 }
 
 type NodeGetRepliesReply struct {
-	NodeID     *int64         `json:"node_id"`
+	NodeID     int64          `json:"node_id"`
 	ReplyCount int            `json:"reply_count"`
 	Replies    []*models.Node `json:"replies"`
 }
@@ -283,7 +283,7 @@ func (n *NodeService) GetReplies(r *http.Request, args *NodeGetRepliesArgs, repl
 	}
 
 	// Generate response
-	reply.NodeID = &args.NodeID
+	reply.NodeID = args.NodeID
 	reply.ReplyCount = len(nodeReplies)
 	reply.Replies = nodeReplies
 
@@ -323,17 +323,17 @@ func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInATh
 ///////////////
 
 type NodeForkNodeArgs struct {
-	NodeID   *int64        `json:"node_id"`
-	TeamID   *int64        `json:"team_id"`
-	AuthorID *int64        `json:"author_id"`
-	Subject  *string       `json:"subject"`
-	Body     *string       `json:"body"`
-	RichData *models.JSONB `json:"rich_data"`
+	NodeID   int64             `json:"node_id"`
+	TeamID   int64             `json:"team_id"`
+	AuthorID int64             `json:"author_id"`
+	Subject  models.NullString `json:"subject"`
+	Body     models.NullString `json:"body"`
+	RichData models.JSONB      `json:"rich_data"`
 }
 
 type NodeForkNodeReply struct {
-	ForkedThreadID *int64 `json:"forked_thread_id"`
-	ForkedFrom     *int64 `json:"forked_from"`
+	ForkedThreadID int64 `json:"forked_thread_id"`
+	ForkedFrom     int64 `json:"forked_from"`
 }
 
 // Fork creates a new thread from current node
@@ -350,7 +350,7 @@ func (n *NodeService) Fork(r *http.Request, args *NodeForkNodeArgs, reply *NodeF
 	}
 
 	// Generate response
-	reply.ForkedThreadID = &threadID
+	reply.ForkedThreadID = threadID
 	reply.ForkedFrom = args.NodeID
 	return nil
 }

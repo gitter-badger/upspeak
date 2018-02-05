@@ -1,7 +1,0 @@
-# Server
-[server]
-port = "8086"
-
-# Postgres
-[pg]
-connStr = ""

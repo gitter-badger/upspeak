@@ -1,4 +1,4 @@
-package utils
+package rpc
 
 import (
 	"time"
@@ -13,7 +13,7 @@ type Claims struct {
 }
 
 // NewUserToken generates a JWT for users and signs with given secret
-func NewUserToken(issuer string, audience string, username string, secret string) (string, error) {
+func NewUserToken(username string, issuer string, audience string, secret string) (string, error) {
 	claims := Claims{
 		"user",
 		jwt.StandardClaims{
@@ -28,8 +28,24 @@ func NewUserToken(issuer string, audience string, username string, secret string
 	return utoken.SignedString([]byte(secret))
 }
 
+// NewSignupToken generates a JWT for user signups
+func NewSignupToken(email string, issuer string, audience string, secret string) (string, error) {
+	claims := Claims{
+		"signup",
+		jwt.StandardClaims{
+			Issuer:    issuer,
+			Subject:   email,
+			Audience:  audience,
+			ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
+	}
+	utoken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	return utoken.SignedString([]byte(secret))
+}
+
 // ParseToken attempts to verify a signed JWT issued for user auth
-func ParseToken(audience string, token string, secret string) (*Claims, error) {
+func ParseToken(token string, secret string, audience string) (*Claims, error) {
 	parsed, err := jwt.ParseWithClaims(token, &Claims{}, func(parsed *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})

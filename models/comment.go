@@ -20,7 +20,7 @@ returning id;
 `
 
 // CreateComment creates a comment and returns the new node ID
-func CreateComment(data *NodeData, threadID *int64, authorID *int64, inReplyToID *int64) (int64, error) {
+func CreateComment(data NodeData, threadID int64, authorID int64, inReplyToID int64) (int64, error) {
 	var nodeID int64
 	err := db.QueryRow(
 		createCommentQuery,

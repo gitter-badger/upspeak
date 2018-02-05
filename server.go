@@ -3,39 +3,27 @@ package main
 import (
 	"log"
 	_ "net/http/pprof"
-	"os"
 
 	"net/http"
 
+	"github.com/applait/upspeak/config"
 	"github.com/applait/upspeak/models"
 	rpcService "github.com/applait/upspeak/rpc"
 
 	"github.com/gorilla/rpc/v2"
 	"github.com/gorilla/rpc/v2/json2"
-	"github.com/spf13/viper"
 )
-
-func init() {
-	// Set viper path and read configuration
-	viper.AddConfigPath(".")
-	if os.Getenv("ENV") == "PRODUCTION" {
-		viper.SetConfigName("config")
-	} else {
-		viper.SetConfigName("devconfig")
-	}
-	err := viper.ReadInConfig()
-
-	// Handle errors reading the config file
-	if err != nil {
-		log.Fatalln("Fatal error config file", err)
-	}
-}
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	Conf := config.InitConfig()
+
+	// Init rpc package and pass in configuration for usage from within the package
+	rpcService.InitRpc(Conf)
+
 	// Initiate database connection
-	models.ConnectDB(viper.GetString("pg.connStr"))
+	models.ConnectDB(Conf.PG.ConnStr)
 
 	server := rpc.NewServer()
 	server.RegisterCodec(json2.NewCodec(), "application/json")
@@ -48,6 +36,6 @@ func main() {
 
 	http.Handle("/api/v1", server)
 
-	log.Printf("Upspeak rig | Port %s", viper.GetString("server.port"))
-	log.Fatal(http.ListenAndServe(":"+viper.GetString("server.port"), nil))
+	log.Printf("Upspeak rig | Port %s", Conf.Server.Port)
+	log.Fatal(http.ListenAndServe(":"+Conf.Server.Port, nil))
 }
