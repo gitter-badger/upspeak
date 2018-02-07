@@ -22,14 +22,17 @@ type NodeGetArgs struct {
 
 // NodeGetReply defines the result data type for node.Get
 type NodeGetReply struct {
-	Node models.Node `json:"node"`
+	Error RpcError    `json:"error"`
+	Node  models.Node `json:"node"`
 }
 
 // Get fetches the contents of a single node given a Node ID
 func (n *NodeService) Get(r *http.Request, args *NodeGetArgs, reply *NodeGetReply) error {
 	_node, err := models.GetNode(&args.NodeID)
 	if err != nil {
-		log.Println(err)
+		reply.Error.Code = 100
+		reply.Error.Message = "Error fetching node"
+		return nil
 	}
 
 	// Generate response
