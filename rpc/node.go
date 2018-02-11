@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"time"
 
@@ -57,7 +56,7 @@ type NodeGetForksReply struct {
 func (n *NodeService) GetForks(r *http.Request, args *NodeGetForksArgs, reply *NodeGetForksReply) error {
 	ts, err := models.GetNodeForks(args.NodeID)
 	if err != nil {
-		log.Println(err)
+		return ErrNodeForksFetch
 	}
 
 	// Generate response
@@ -88,7 +87,7 @@ type GetNodesReply struct {
 func (n *NodeService) GetNodes(r *http.Request, args *GetNodesArgs, reply *GetNodesReply) error {
 	nodes, err := models.GetNodes(args.ThreadID)
 	if err != nil {
-		log.Println(err)
+		return ErrNodesFetch
 	}
 
 	// Generate response
@@ -124,7 +123,7 @@ func (n *NodeService) CreateThread(r *http.Request, args *CreateThreadArgs, repl
 	}
 	threadID, err := models.CreateThread(data, &args.TeamID, &args.AuthorID)
 	if err != nil {
-		log.Println(err)
+		return ErrCreateThread
 	}
 
 	reply.ThreadID = threadID
@@ -157,8 +156,7 @@ func (n *NodeService) Edit(r *http.Request, args *NodeEditArgs, reply *NodeEditR
 	}
 	rev, err := models.NodeAddRevision(args.NodeID, args.AuthorID, data)
 	if err != nil {
-		log.Println(err)
-		return err
+		return ErrCreateNodeRevision
 	}
 
 	reply.NodeID = args.NodeID
@@ -194,8 +192,7 @@ func (n *NodeService) CreateComment(r *http.Request, args *NodeCreateCommentArgs
 	}
 	nid, err := models.CreateComment(data, args.ThreadID, args.AuthorID, args.InReplyToID)
 	if err != nil {
-		log.Println(err)
-		return err
+		return ErrAddComment
 	}
 
 	reply.NodeID = nid
@@ -221,7 +218,7 @@ func (n *NodeService) GetRevision(r *http.Request, args *NodeGetRevisionArgs, re
 	rev, err := models.GetNodeRevision(args.NodeID, args.CreatedAt)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Println(err)
+			return ErrNodeRevisionFetch
 		}
 	}
 
@@ -249,8 +246,7 @@ type NodeGetRevisionsReply struct {
 func (n *NodeService) GetRevisions(r *http.Request, args *NodeGetRevisionsArgs, reply *NodeGetRevisionsReply) error {
 	revisions, err := models.GetNodeRevisions(args.NodeID)
 	if err != nil {
-		log.Println(err)
-		return err
+		return ErrNodeRevisionsFetch
 	}
 
 	// Generate response
@@ -279,7 +275,7 @@ type NodeGetRepliesReply struct {
 func (n *NodeService) GetReplies(r *http.Request, args *NodeGetRepliesArgs, reply *NodeGetRepliesReply) error {
 	nodeReplies, err := models.GetReplies(args.NodeID)
 	if err != nil {
-		log.Println(err)
+		return ErrNodeRepliesFetch
 	}
 
 	// Generate response
@@ -308,7 +304,7 @@ type NodeGetForksInAThreadReply struct {
 func (n *NodeService) GetForksInAThread(r *http.Request, args *NodeGetForksInAThreadArgs, reply *NodeGetForksInAThreadReply) error {
 	forks, err := models.GetForksInAThread(args.ThreadID)
 	if err != nil {
-		log.Println(err)
+		return ErrThreadForksFetch
 	}
 
 	// Generate response
@@ -345,8 +341,7 @@ func (n *NodeService) Fork(r *http.Request, args *NodeForkNodeArgs, reply *NodeF
 	}
 	threadID, err := models.ForkNode(args.NodeID, args.TeamID, args.AuthorID, quotedData)
 	if err != nil {
-		log.Println(err)
-		return err
+		return ErrNodeFork
 	}
 
 	// Generate response
