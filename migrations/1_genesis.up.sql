@@ -1,9 +1,3 @@
--- We use the `public` schema by default
-create schema if not exists public;
-
-set search_path = public, pg_catalog;
-
-
 /**
  * generate_id creates unique IDs based on timestamp
  *
@@ -115,30 +109,6 @@ create table public.workspace_members (
     primary key (workspace_id, user_id)
 );
 
-
-/**
- * Threads store thread-level states and are linked to workspaces. Thread ID is a
- * source-node ID.
- */
-create table public.threads (
-    id bigint not null primary key references public.nodes (id) deferrable initially deferred,
-    -- team the thread belongs to. Same as source node's team ID
-    workspace_id bigint not null references public.workspaces (id),
-    permissions jsonb, -- thread permissions
-     -- if null, thread is not forked
-    forked_from_node bigint references public.nodes (id) deferrable initially deferred,
-    merge_node bigint references public.nodes (id) deferrable initially deferred,
-    is_open boolean default true, -- thread is open to new comments
-    attrs jsonb -- thread-level attributes
-);
-
--- Index workspaces to pull threads quicker
-create index thread_workspace_idx on threads using btree (workspace_id);
-
--- gin indexing for thread attributes
-create index thread_attrs_idx on threads using gin (attrs jsonb_path_ops);
-
-
 /**
  * List of available node types
  */
@@ -170,7 +140,7 @@ create table nodes (
     body text,
     rich_data jsonb,
     in_reply_to bigint references public.nodes(id),
-    attrs jsonb,
+    attrs jsonb
 );
 
 -- Btree index of authors of nodes
@@ -193,7 +163,7 @@ create table audit.node_revisions (
     rich_data jsonb,
     created_at timestamp with time zone default now() not null,
     committer_id bigint not null references public.users(id),
-    node_id bigint not null references public.nodes(id)
+    node_id bigint not null references public.nodes(id),
 
     -- Combo primary key
     primary key (node_id, created_at)
@@ -233,3 +203,25 @@ create trigger trigger_node_revision
   on public.nodes
   for each row
   execute procedure trigger_on_node_revision();
+
+/**
+ * Threads store thread-level states and are linked to workspaces. Thread ID is a
+ * source-node ID.
+ */
+create table public.threads (
+    id bigint not null primary key references public.nodes (id) deferrable initially deferred,
+    -- team the thread belongs to. Same as source node's team ID
+    workspace_id bigint not null references public.workspaces (id),
+    permissions jsonb, -- thread permissions
+     -- if null, thread is not forked
+    forked_from_node bigint references public.nodes (id) deferrable initially deferred,
+    merge_node bigint references public.nodes (id) deferrable initially deferred,
+    is_open boolean default true, -- thread is open to new comments
+    attrs jsonb -- thread-level attributes
+);
+
+-- Index workspaces to pull threads quicker
+create index thread_workspace_idx on threads using btree (workspace_id);
+
+-- gin indexing for thread attributes
+create index thread_attrs_idx on threads using gin (attrs jsonb_path_ops);
