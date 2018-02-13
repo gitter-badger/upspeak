@@ -1,4 +1,15 @@
 /**
+ * global_id_seq is used to generate ids by generate_id() by default.
+ */
+create sequence public.global_id_seq
+    start with 1
+    increment by 1
+    no minvalue
+    no maxvalue
+    cache 1
+    cycle;
+
+/**
  * generate_id creates unique IDs based on timestamp
  *
  * Generates 64-bit integer (bigint) id using timestamp and a given sequence. 46
@@ -24,18 +35,6 @@ begin
     result := result | (seq_id);
 end;
 $$;
-
-
-/**
- * global_id_seq is used to generate ids by generate_id() by default.
- */
-create sequence public.global_id_seq
-    start with 1
-    increment by 1
-    no minvalue
-    no maxvalue
-    cache 1
-    cycle;
 
 /**
  * Create users table. All exposed API calls happen in some users' scope.
@@ -93,7 +92,8 @@ create index namespace_user_id_idx on public.namespaces using btree (user_id);
  */
 create table public.workspaces (
     id bigint default generate_id() not null primary key,
-    namespace_slug character varying(256) not null references public.namespaces (slug)
+    namespace_slug character varying(256) not null references public.namespaces (slug),
+    visibility_level character varying(10) -- Can be 'hidden', 'private', 'public'
 );
 
 /**
@@ -103,7 +103,6 @@ create table public.workspace_members (
     workspace_id bigint not null references public.workspaces(id),
     user_id bigint not null references public.users(id),
     access_level character varying(10), -- Can be 'read', 'write' or 'admin'
-    visibility_level character varying(10), -- Can be 'hidden', 'private', 'public'
 
     -- Combo primary key
     primary key (workspace_id, user_id)
@@ -155,7 +154,7 @@ create index node_attrs_idx on public.nodes using gin (attrs jsonb_path_ops);
 /**
  * Create node revisions table
  */
-create schema audit;
+create schema if not exists audit;
 
 create table audit.node_revisions (
     subject text,
@@ -212,7 +211,6 @@ create table public.threads (
     id bigint not null primary key references public.nodes (id) deferrable initially deferred,
     -- team the thread belongs to. Same as source node's team ID
     workspace_id bigint not null references public.workspaces (id),
-    permissions jsonb, -- thread permissions
      -- if null, thread is not forked
     forked_from_node bigint references public.nodes (id) deferrable initially deferred,
     merge_node bigint references public.nodes (id) deferrable initially deferred,
