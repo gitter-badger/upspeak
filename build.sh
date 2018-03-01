@@ -31,6 +31,14 @@ function buildWebClientDev {
     cd ..
 }
 
+function buildWebClientDevServer {
+    echo "Building web client dev server"
+    cleanWebDist
+    cd web/
+    npm run build-dev-server
+    cd ..
+}
+
 function buildWebClientRelease {
     echo "Building web client release"
     cleanWebDist
@@ -62,8 +70,11 @@ case "$1" in
     "web-dev")
     buildWebClientDev
     ;;
+    "web-dev-server")
+    buildWebClientDevServer
+    ;;
     *)
-    echo "Usage: ./build.sh [dev|release|web|web-dev|help]"
+    echo "Usage: ./build.sh [dev|release|web|web-dev|web-dev-server|help]"
     echo "Binaries are put in './bin/'"
     echo "Web app is packaged in './bin/web/'"
     ;;

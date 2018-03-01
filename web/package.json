@@ -9,10 +9,10 @@
     "start": "npm run dev",
     "lint": "eslint --ext .js,.vue src",
     "build": "NODE_ENV=production webpack --config build/webpack.prod.conf.js --hide-modules",
-    "build-dev": "webpack --config build/webpack.dev.conf.js --hide-modules"
+    "build-dev": "webpack --config build/webpack.dev.conf.js --hide-modules",
+    "build-dev-server": "webpack-dev-server --config build/webpack.dev.conf.js"
   },
   "dependencies": {
-    "uikit": "^3.0.0-beta.35",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },
@@ -61,7 +61,7 @@
   },
   "browserslist": [
     "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
+    "last 3 versions",
+    "ie >= 11"
   ]
 }

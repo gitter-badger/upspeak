@@ -3,7 +3,7 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 
-import '@/styles/theme.less'
+import '@/styles/main.less'
 
 Vue.config.productionTip = false
 
