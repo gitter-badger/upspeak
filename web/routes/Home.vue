@@ -2,14 +2,18 @@
   <div>
     <h1>Upspeak</h1>
     <p> A contextual discussion and knowledge-sharing platform</p>
-    <router-link to="/auth/login">Login</router-link>
-    <router-link to="/auth/signup">Signup</router-link>
+    <button class="button" @click="doLogin">Login</button>
   </div>
 </template>
 
 <script>
 
 export default {
-  name: 'Home'
+  name: 'Home',
+  methods: {
+    doLogin: function () {
+      console.log('Login')
+    }
+  }
 }
 </script>

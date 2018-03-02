@@ -1,6 +1,48 @@
 /**
  * Layout related styles
  */
-.grid {
+
+.page {
   display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: 2.5em minmax(calc(100vmin - 5em), auto) minmax(3em, max-content);
+  grid-template-areas:
+    "context context context"
+    "primary primary primary"
+    "secondary secondary secondary"
+    "footer footer footer";
+
+  .track-context {
+    grid-area: context;
+    background-color: #333;
+  }
+
+  .track-primary {
+    grid-area: primary;
+  }
+
+  .track-secondary {
+    grid-area: secondary;
+    background-color: #eee;
+  }
+
+  .track-footer {
+    grid-area: footer;
+    background-color: #ccc;
+  }
+
+  @media screen and (min-width: 960px) {
+    grid-template-columns: 10em auto 20em;
+    grid-template-areas:
+      "context context context"
+      "primary primary secondary"
+      "footer footer footer";
+  }
+
+  @media screen and (min-width: 1200px) {
+    grid-template-areas:
+      "context primary secondary"
+      "context primary secondary"
+      "context footer footer";
+  }
 }
