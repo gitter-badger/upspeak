@@ -1,8 +1,6 @@
 package matrix
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/url"
 	"path"
 	"time"
