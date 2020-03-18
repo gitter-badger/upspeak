@@ -1,6 +1,8 @@
 package matrix
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"path"
 	"time"
@@ -8,7 +10,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-var prefixPath = "_matrix/client/r0"
+const prefixPath string = "_matrix/client/r0"
 
 // client is the main type for handling requests to the Matrix client-server API
 type client struct {
@@ -18,12 +20,13 @@ type client struct {
 	httpClient  *resty.Client
 }
 
+// token adds an accessToken to Client
 func (c *client) token(t string) *client {
 	c.accessToken = t
 	return c
 }
 
-// Send prepares and sends a HTTP request
+// send prepares and sends a HTTP request
 func (c *client) send(method string, subPath string, params url.Values, reqBody interface{}, resBody interface{}) error {
 	u, err := url.Parse(c.baseURL.String())
 	if err != nil {
