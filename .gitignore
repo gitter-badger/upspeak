@@ -1,9 +1,1 @@
-# External package imports
-vendor
-
-# Bin executable
-bin
-upspeak
-
-# Configuration
-devconfig.toml
+.vscode/
