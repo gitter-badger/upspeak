@@ -2,49 +2,58 @@ package matrix
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
 )
 
-const (
-	baseURL = "https://matrix.org"
-	userID  = "@test:upspeak.net"
-	token   = "i19291k2imimimsidxmdi1m9k29oi3kmimimaisds=="
-)
-
-func apiPath(paths ...string) string {
-	return strings.Join([]string{baseURL, prefixPath, strings.Join(paths, "/")}, "/")
-}
-
 func TestNewClient(t *testing.T) {
+	const (
+		baseURL = "https://matrix.org"
+		userID  = "@test:upspeak.net"
+		token   = "sidji1jwimdi939293dmaimdi1m3imiemamsqoef111wma=="
+	)
 	c, err := newClient(baseURL, userID)
 	if err != nil {
 		t.Errorf("Error creating client. Err: %s", err.Error())
 	}
-	if c.baseURL.Path != prefixPath {
+	if c.baseURL.Path != "/_matrix/client/r0" {
 		t.Errorf("Client Prefix path not set correctly")
 	}
 	c.token(token)
 	if c.accessToken != token {
 		t.Errorf("Client Access token not set correctly")
 	}
-	// c.httpClient
 }
 
 type testRes struct {
 	Message string `json:"message"`
 }
 
+func TestAPIPath(t *testing.T) {
+	c, err := newClient("https://example.com", "@test:example.com")
+	if err != nil {
+		t.Error("Error creating new client")
+	}
+	expectedPath := "https://example.com/_matrix/client/r0/test"
+	testPath := c.apiPath("test")
+	if testPath != expectedPath {
+		t.Errorf("Invalid API Path")
+	}
+}
+
 func TestSend(t *testing.T) {
+	var (
+		baseURL = "https://matrix.org"
+		userID  = "@test:upspeak.net"
+	)
 	c, err := newClient(baseURL, userID)
 	if err != nil {
 		t.Errorf("Error creating client. Err: %s", err.Error())
 	}
 	httpmock.ActivateNonDefault(c.httpClient.GetClient())
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", apiPath("test"),
+	httpmock.RegisterResponder("GET", c.apiPath("test"),
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, testRes{Message: "test123"})
 			if err != nil {

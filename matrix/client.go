@@ -3,12 +3,11 @@ package matrix
 import (
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 )
-
-const prefixPath string = "_matrix/client/r0"
 
 // client is the main type for handling requests to the Matrix client-server API
 type client struct {
@@ -53,13 +52,19 @@ func (c *client) send(method string, subPath string, params url.Values, reqBody 
 	return nil
 }
 
+func (c *client) apiPath(paths ...string) string {
+	b := c.baseURL.String()
+	b = b + "/" + strings.Trim(path.Join(paths...), "/")
+	return b
+}
+
 // newClient creates a new HTTP client to send requests to the Matrix client-server API
 func newClient(hsURL, userID string) (*client, error) {
 	u, err := url.Parse(hsURL)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = prefixPath
+	u.Path = "/_matrix/client/r0"
 	c := client{
 		baseURL:    u,
 		userID:     userID,
