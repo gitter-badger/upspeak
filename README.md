@@ -4,7 +4,7 @@ A real-time, distributed, and contextual discussion platform built on Matrix.
 
 Upspeak aims to be a natural discussion and knowledge sharing system that enables discussions based on context (or, maintains context of all conversations), seamlessly blends synchronous and asynchronous communication modes, and provides a distraction-free experience.
 
-![Test status](https://github.com/upspeak/upspeak/workflows/Test/badge.svg)
+![Test status](https://github.com/upspeak/upspeak/workflows/Test/badge.svg) [![DeepSource](https://static.deepsource.io/deepsource-badge-light-mini.svg)](https://deepsource.io/gh/upspeak/upspeak/?ref=repository-badge)
 
 ## Project status
 
