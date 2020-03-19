@@ -19,23 +19,25 @@ type LoginPasswordResponse struct {
 }
 
 // LoginPassword sends a login request to Matrix with a password
-func LoginPassword(homeserverURL, userID, password string) (LoginPasswordResponse, error) {
+func (c *Client) LoginPassword(password string) (LoginPasswordResponse, error) {
 	var res LoginPasswordResponse
-	c, err := newClient(homeserverURL, userID)
+	req := request{
+		method:  "POST",
+		subPath: "login",
+		body: loginPasswordRequest{
+			Type: "m.login.password",
+			Identifier: UserIdentifier{
+				Type: "m.id.user",
+				User: c.userID,
+			},
+			Password:   password,
+			DeviceName: "Upspeak",
+		},
+	}
+	err := c.send(req, &res)
 	if err != nil {
 		return res, err
 	}
-	req := loginPasswordRequest{
-		Type: "m.login.password",
-		Identifier: UserIdentifier{
-			Type: "m.id.user",
-			User: userID,
-		},
-		Password:   password,
-		DeviceName: "Upspeak",
-	}
-	if err = c.send("POST", "login", nil, req, res); err != nil {
-		return res, err
-	}
+	c.Token(res.AccessToken)
 	return res, nil
 }
