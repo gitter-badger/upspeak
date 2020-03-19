@@ -13,16 +13,19 @@ func TestNewClient(t *testing.T) {
 		userID  = "@test:upspeak.net"
 		token   = "sidji1jwimdi939293dmaimdi1m3imiemamsqoef111wma=="
 	)
-	c, err := newClient(baseURL, userID)
+	c, err := NewClient(baseURL, userID)
 	if err != nil {
 		t.Errorf("Error creating client. Err: %s", err.Error())
 	}
 	if c.baseURL.Path != "/_matrix/client/r0" {
 		t.Errorf("Client Prefix path not set correctly")
 	}
-	c.token(token)
+	c.Token(token)
 	if c.accessToken != token {
 		t.Errorf("Client Access token not set correctly")
+	}
+	if c.UserID() != userID {
+		t.Errorf("Invalid user ID returned by ")
 	}
 }
 
@@ -31,7 +34,7 @@ type testRes struct {
 }
 
 func TestAPIPath(t *testing.T) {
-	c, err := newClient("https://example.com", "@test:example.com")
+	c, err := NewClient("https://example.com", "@test:example.com")
 	if err != nil {
 		t.Error("Error creating new client")
 	}
@@ -47,7 +50,7 @@ func TestSend(t *testing.T) {
 		baseURL = "https://matrix.org"
 		userID  = "@test:upspeak.net"
 	)
-	c, err := newClient(baseURL, userID)
+	c, err := NewClient(baseURL, userID)
 	if err != nil {
 		t.Errorf("Error creating client. Err: %s", err.Error())
 	}
@@ -64,7 +67,10 @@ func TestSend(t *testing.T) {
 	)
 
 	var tres testRes
-	err = c.send("GET", "test", nil, nil, &tres)
+	err = c.send(request{
+		method:  "GET",
+		subPath: "test",
+	}, &tres)
 	if err != nil {
 		t.Error("Error sending request")
 	}
