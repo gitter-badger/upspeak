@@ -3,7 +3,6 @@ package matrix
 import (
 	"net/url"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -11,7 +10,8 @@ import (
 
 // Client is the main type for handling requests to the Matrix client-server API
 type Client struct {
-	baseURL     *url.URL
+	host        string
+	prefixPath  string
 	userID      string
 	accessToken string
 	httpClient  *resty.Client
@@ -30,19 +30,24 @@ func (c *Client) UserID() string {
 
 // Internal request structure used in call to Client.send()
 type request struct {
-	method  string
-	subPath string
-	params  url.Values
-	body    interface{}
+	method     string
+	subPath    string
+	prefixPath string
+	params     url.Values
+	body       interface{}
 }
 
 // send prepares and sends a HTTP request
 func (c *Client) send(req request, resBody interface{}) error {
-	u, err := url.Parse(c.baseURL.String())
-	if err != nil {
-		return nil
+	u := url.URL{
+		Scheme: "https",
+		Host:   c.host,
 	}
-	u.Path = path.Join(u.Path, req.subPath)
+	if req.prefixPath != "" {
+		u.Path = path.Join(req.prefixPath, req.subPath)
+	} else {
+		u.Path = path.Join(c.prefixPath, req.subPath)
+	}
 	r := c.httpClient.R().SetContentLength(true)
 	r.URL = u.String()
 	if c.accessToken != "" {
@@ -65,21 +70,15 @@ func (c *Client) send(req request, resBody interface{}) error {
 	return nil
 }
 
-func (c *Client) apiPath(paths ...string) string {
-	b := c.baseURL.String()
-	b = b + "/" + strings.Trim(path.Join(paths...), "/")
-	return b
-}
-
 // NewClient creates a new HTTP client to send requests to the Matrix client-server API
 func NewClient(hsURL, userID string) (*Client, error) {
 	u, err := url.Parse(hsURL)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = "/_matrix/client/r0"
 	c := &Client{
-		baseURL:    u,
+		host:       u.Host,
+		prefixPath: "/_matrix/client/r0",
 		userID:     userID,
 		httpClient: resty.New().SetTimeout(15 * time.Second),
 	}

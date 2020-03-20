@@ -30,7 +30,7 @@ func TestLoginPasswordSuccess(t *testing.T) {
 
 	httpmock.ActivateNonDefault(c.httpClient.GetClient())
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("POST", c.apiPath("login"),
+	httpmock.RegisterResponder("POST", "https://matrix.org/_matrix/client/r0/login",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewJsonResponse(200, expectedRes)
 		},

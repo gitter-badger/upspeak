@@ -17,7 +17,7 @@ func TestNewClient(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error creating client. Err: %s", err.Error())
 	}
-	if c.baseURL.Path != "/_matrix/client/r0" {
+	if c.prefixPath != "/_matrix/client/r0" {
 		t.Errorf("Client Prefix path not set correctly")
 	}
 	c.Token(token)
@@ -33,18 +33,6 @@ type testRes struct {
 	Message string `json:"message"`
 }
 
-func TestAPIPath(t *testing.T) {
-	c, err := NewClient("https://example.com", "@test:example.com")
-	if err != nil {
-		t.Error("Error creating new client")
-	}
-	expectedPath := "https://example.com/_matrix/client/r0/test"
-	testPath := c.apiPath("test")
-	if testPath != expectedPath {
-		t.Errorf("Invalid API Path")
-	}
-}
-
 func TestSend(t *testing.T) {
 	var (
 		baseURL = "https://matrix.org"
@@ -56,7 +44,7 @@ func TestSend(t *testing.T) {
 	}
 	httpmock.ActivateNonDefault(c.httpClient.GetClient())
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", c.apiPath("test"),
+	httpmock.RegisterResponder("GET", "https://matrix.org/_matrix/client/r0/test",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, testRes{Message: "test123"})
 			if err != nil {

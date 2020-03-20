@@ -27,7 +27,7 @@ func TestVersionSuccess(t *testing.T) {
 
 	httpmock.ActivateNonDefault(c.httpClient.GetClient())
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", c.apiPath("versions"),
+	httpmock.RegisterResponder("GET", "https://matrix.org/_matrix/client/r0/versions",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewJsonResponse(200, expectedRes)
 		},
