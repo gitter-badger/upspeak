@@ -20,6 +20,10 @@ Create and retain relations between discussions. Given any point in a conversati
 
 Group conversations in threads, rooms and workspaces. Make every entity discoverable and linkable. Entities can be cross-linked with a simple syntax. Visualize the connectedness of conversation. Switch between thread view, graph view, and chat scroll.
 
+### Reduce information overload
+
+Build UX to reduce cognitive and physical stress caused to the participant. Make people feel calm and informed. Not triggered and panicky. Understand how [information overload](https://openaccess.city.ac.uk/id/eprint/23544/) snowballs in times of public panic. Help people get access to information, minux the anxiety.
+
 ### Real-time with offline capability
 
 The system updates in real-time when connected to the internet. States persist automatically. No user action is needed. Writing and limited access should be possible while offline. Data is synced when online.
@@ -30,7 +34,7 @@ Allow text, audio and video communications. Fall back to asynchronous communicat
 
 ### Interoperability
 
-A comprehensive HTTP API. Allow data import and export. Integrate with existing tools and services wherever possible.
+A comprehensive HTTP API. Allow data import and export. Integrate with existing tools and services wherever possible. Allow combining data from multiple sources.
 
 ### Ease of use
 
