@@ -6,6 +6,14 @@ Upspeak aims to be a natural discussion and knowledge sharing system that enable
 
 ![Test status](https://github.com/upspeak/upspeak/workflows/Test/badge.svg) [![DeepSource](https://static.deepsource.io/deepsource-badge-light-mini.svg)](https://deepsource.io/gh/upspeak/upspeak/?ref=repository-badge)
 
+## Table of Contents
+
+- [Project status](#project-status)
+- [Focus areas](#focus-areas)
+- [Hypothesis](#hypothesis)
+- [Data model](#data-model)
+- [License](#license)
+
 ## Project status
 
 Still an idea under experiment.
