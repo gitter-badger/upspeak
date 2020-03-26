@@ -1,4 +1,4 @@
-package queue
+package hub
 
 import (
 	"github.com/google/uuid"
@@ -93,7 +93,7 @@ func (q Queue) Pipe(q2 Queue) (Queue, error) {
 // New returns a new Queue
 func New(name string) (*Queue, error) {
 	c := nsq.NewConfig()
-	p, err := nsq.NewProducer("https://127.0.0.1:4150", c)
+	p, err := nsq.NewProducer("https://127.0.0.1:4150", c) // TODO: Use config for nsqd address
 	if err != nil {
 		return nil, err
 	}
