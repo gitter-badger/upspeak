@@ -30,7 +30,7 @@ Group conversations in threads, rooms and workspaces. Make every entity discover
 
 ### Reduce information overload
 
-Build UX to reduce cognitive and physical stress caused to the participant. Make people feel calm and informed. Not triggered and panicky. Understand how [information overload](https://openaccess.city.ac.uk/id/eprint/23544/) snowballs in times of public panic. Help people get access to information, minux the anxiety.
+Build UX to achieve balance between information overload and information poverty. Make people feel calm and informed. Understand how [information overload](https://openaccess.city.ac.uk/id/eprint/23544/) snowballs in times of public panic. Help people get access to information, minux the anxiety.
 
 ### Real-time with offline capability
 
