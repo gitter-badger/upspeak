@@ -1,4 +1,4 @@
-package hub
+package upspeak
 
 import (
 	"github.com/google/uuid"
