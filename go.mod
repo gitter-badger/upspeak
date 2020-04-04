@@ -7,4 +7,5 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/jarcoal/httpmock v1.0.5
 	github.com/nsqio/go-nsq v1.0.8
+	go.mongodb.org/mongo-driver v1.3.1
 )
