@@ -15,12 +15,14 @@ function buildServerRelease {
     echo "Building upspeak server release"
     export CGO_ENABLED=0
     export GOOS=linux
-    go build -o bin/upspeak-rig -a -ldflags '-extldflags "-static"' .
+    go build -o bin/upspeak -a -ldflags '-extldflags "-static"' .
+    chmod +x bin/upspeak
 }
 
 function buildServerDev {
     echo "Building upspeak server dev"
-    go build -o bin/upspeak-rig .
+    go build -o bin/upspeak .
+    chmod +x bin/upspeak
 }
 
 function buildServerDockerDev {

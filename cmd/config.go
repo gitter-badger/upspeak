@@ -3,46 +3,47 @@ package cmd
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
-// Config holds the configuration
-type Config struct {
-	Server struct {
-		Port string
-	}
-	PG struct {
-		ConnStr string
-	}
-	JWT struct {
-		Issuer   string
-		Audience string
-		Secret   string
-	}
-}
+// InitConfig reads config and returns a Viper instance
+func InitConfig() *viper.Viper {
+	v := viper.New()
 
-// InitConfig unmarshals config into config struct
-func InitConfig() Config {
-	// Set viper path and read configuration
-	viper.AddConfigPath(".")
-	if os.Getenv("ENV") == "PRODUCTION" {
-		viper.SetConfigName("upspeak")
+	// Set config file name depending on the `ENV` env variable
+	if strings.ToLower(os.Getenv("ENV")) == "production" {
+		v.SetConfigName("upspeak")
 	} else {
-		viper.SetConfigName("upspeak.dev")
-	}
-	err := viper.ReadInConfig()
-
-	// Handle errors reading the config file
-	if err != nil {
-		log.Fatalln("Fatal error config file", err)
+		v.SetConfigName("upspeak.dev")
 	}
 
-	var config Config
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		log.Fatalf("Unable to decode config into struct, %v", err)
+	// We will try only JSON for now
+	v.SetConfigType("json")
+
+	// Set viper path and read configuration
+	v.AddConfigPath("$HOME/.upspeak")
+	v.AddConfigPath(".")
+
+	// Defaults
+	v.SetDefault("Port", "8080")
+	v.SetDefault("PostgresURL", "postgres://root@localhost/upspeak")
+	v.SetDefault("Env", "DEV")
+
+	// Bind environment values
+	v.BindEnv("Port", "PORT")
+	v.BindEnv("PostgresURL", "POSTGRES_URL")
+	v.BindEnv("Env", "ENV")
+
+	if err := v.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Print("Config file not found.")
+		} else {
+			// Config file was found but another error was produced
+			log.Print("Error in config", err)
+		}
 	}
 
-	return config
+	return v
 }

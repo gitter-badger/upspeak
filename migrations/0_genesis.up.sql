@@ -218,7 +218,7 @@ create table public.threads (
     forked_from_node bigint references public.nodes (id) deferrable initially deferred,
     merge_node bigint references public.nodes (id) deferrable initially deferred,
     is_open boolean default true, -- thread is open to new comments
-    attrs jsonb -- thread-level attributes
+    attrs jsonb, -- thread-level attributes
     is_archived bool not null default false -- soft-delete thread
 );
 

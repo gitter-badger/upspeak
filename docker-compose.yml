@@ -3,6 +3,10 @@ services:
 
   server:
     container_name: upspeak_server
+    environment:
+      - POSTGRES_URL=postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable
+      - PORT=8080
+      - ENV=development
     build: .
     ports:
       - 8080:8080
@@ -36,8 +40,18 @@ services:
     networks:
       - fullstack
     volumes:
-      - migrations:/migrations
-    command: ["-path", "/migrations", "-database",  "postgres://postgres:password@db:5432/upspeak_dev", "up"]
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database",  "postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable", "up"]
+    depends_on:
+      - db
+
+  migrate-down:
+    image: migrate/migrate
+    networks:
+      - fullstack
+    volumes:
+      - ./migrations:/migrations
+    # command: ["-path", "/migrations", "-database",  "postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable", "down"]
     depends_on:
       - db
 
@@ -73,8 +87,8 @@ services:
       - local_nsq
 
 
-# volumes:
-  # mongo:
+volumes:
+  db:
 
 # Networks to be created to facilitate communication between containers
 networks:

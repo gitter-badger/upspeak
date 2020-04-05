@@ -12,8 +12,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o ./bin/upspeak-rig .
+RUN build.sh dev
 
 EXPOSE 8080
 
-CMD ["/rig/bin/upspeak-rig"]
+CMD ["/rig/bin/upspeak"]

@@ -1,1 +1,4 @@
 .vscode/
+bin/
+./upspeak.dev.json
+./upspeak.json
