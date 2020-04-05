@@ -1,16 +1,45 @@
 version: "3.7"
 services:
 
-  mongo:
-    image: mongo
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
+  server:
+    container_name: upspeak_server
+    build: .
     ports:
-      - 27001:27001
+      - 8080:8080
+    restart: on-failure
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - db
+      - migrate
     networks:
-      - local_mongo
+      - fullstack
+
+
+  db:
+    image: postgres:latest
+    container_name: upspeak_db_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=upspeak_dev
+      - DATABASE_HOST=db
+    ports:
+      - 5432:5432
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - fullstack
+
+  migrate:
+    image: migrate/migrate
+    networks:
+      - fullstack
+    volumes:
+      - migrations:/migrations
+    command: ["-path", "/migrations", "-database",  "postgres://postgres:password@db:5432/upspeak_dev", "up"]
+    depends_on:
+      - db
 
   nsqlookupd:
     image: nsqio/nsq
@@ -20,6 +49,7 @@ services:
       - 4161:4161
     networks:
       - local_nsq
+      - fullstack
 
   nsqd:
     image: nsqio/nsq
@@ -48,7 +78,7 @@ services:
 
 # Networks to be created to facilitate communication between containers
 networks:
-  local_mongo:
-    driver: bridge
   local_nsq:
+    driver: bridge
+  fullstack:
     driver: bridge
