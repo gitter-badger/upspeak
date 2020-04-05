@@ -23,19 +23,21 @@ function buildServerDev {
     go build -o bin/upspeak-rig .
 }
 
+function buildServerDockerDev {
+    echo "Starting up with docker-compose"
+    docker-compose up --build
+}
+
+function stopServerDockerDev {
+    echo "Stopping with docker-compose"
+    docker-compose down --remove-orphans --volumes
+}
+
 function buildWebClientDev {
     echo "Building web client dev"
     cleanWebDist
     cd web/
     npm run build-dev
-    cd ..
-}
-
-function buildWebClientDevServer {
-    echo "Building web client dev server"
-    cleanWebDist
-    cd web/
-    npm run build-dev-server
     cd ..
 }
 
@@ -70,11 +72,14 @@ case "$1" in
     "web-dev")
     buildWebClientDev
     ;;
-    "web-dev-server")
-    buildWebClientDevServer
+    "docker-start")
+    buildServerDockerDev
+    ;;
+    "docker-stop")
+    stopServerDockerDev
     ;;
     *)
-    echo "Usage: ./build.sh [dev|release|web|web-dev|web-dev-server|help]"
+    echo "Usage: ./build.sh [dev|release|web|web-dev|docker-start|docker-stop|help]"
     echo "Binaries are put in './bin/'"
     echo "Web app is packaged in './bin/web/'"
     ;;
