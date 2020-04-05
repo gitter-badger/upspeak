@@ -27,6 +27,10 @@ type NodeDataType struct {
 	attrs      JSONB
 }
 
+func (n *NodeDataType) String() string {
+	return n.ID
+}
+
 // NodeData holds the content for a node
 type NodeData struct {
 	// Data type of the node
