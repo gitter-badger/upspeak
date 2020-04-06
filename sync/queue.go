@@ -1,4 +1,4 @@
-package upspeak
+package sync
 
 import (
 	"github.com/google/uuid"

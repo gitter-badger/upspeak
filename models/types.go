@@ -20,10 +20,21 @@ type NodeAuthor struct {
 	Username NullString `json:"username,omitempty"`
 }
 
+// NodeDataType holds the properties of a node data type
+type NodeDataType struct {
+	ID         string `json:"id"`
+	IsEditable bool   `json:"is_editable"`
+	attrs      JSONB
+}
+
+func (n *NodeDataType) String() string {
+	return n.ID
+}
+
 // NodeData holds the content for a node
 type NodeData struct {
 	// Data type of the node
-	DataType NullString `json:"data_type"`
+	DataType NodeDataType `json:"data_type"`
 	// Subject field for the node
 	Subject NullString `json:"subject"`
 	// Body field for the node

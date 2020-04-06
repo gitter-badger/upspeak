@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	// Load the PostgreSQL driver
 	_ "github.com/lib/pq"
 )
 
