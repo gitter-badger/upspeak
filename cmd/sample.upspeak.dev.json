@@ -1,0 +1,5 @@
+{
+  "port": "8080",
+  "postgres_url": "postgres://root:pass@fullstack/upspeak_dev",
+  "env": "dev"
+}
