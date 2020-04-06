@@ -1,19 +1,22 @@
-FROM golang:alpine
+FROM golang:1.14
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64
+    GOARCH=amd64 \
+    GO111MODULE=on
 
-WORKDIR /rig
+WORKDIR /go/src/upspeak
 
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
 COPY . .
+RUN go build -o bin/upspeak .
 
-RUN build.sh dev
-
+FROM alpine:latest
+WORKDIR /
+COPY --from=0 /go/src/upspeak/bin/upspeak .
+ENV ENV=dev
 EXPOSE 8080
-
-CMD ["/rig/bin/upspeak"]
+CMD ["/upspeak"]

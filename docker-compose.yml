@@ -4,15 +4,15 @@ services:
   server:
     container_name: upspeak_server
     environment:
-      - POSTGRES_URL=postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable
+      - "POSTGRES_URL=postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable"
       - PORT=8080
-      - ENV=development
+      - ENV=dev
     build: .
     ports:
       - 8080:8080
-    restart: on-failure
+    restart: always
     volumes:
-      - .:/usr/src/app/
+      - ./bin:/go/src/upspeak/bin
     depends_on:
       - db
       - migrate
@@ -42,16 +42,6 @@ services:
     volumes:
       - ./migrations:/migrations
     command: ["-path", "/migrations", "-database",  "postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable", "up"]
-    depends_on:
-      - db
-
-  migrate-down:
-    image: migrate/migrate
-    networks:
-      - fullstack
-    volumes:
-      - ./migrations:/migrations
-    # command: ["-path", "/migrations", "-database",  "postgres://postgres:password@db:5432/upspeak_dev?sslmode=disable", "down"]
     depends_on:
       - db
 
