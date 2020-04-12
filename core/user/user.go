@@ -1,8 +1,10 @@
-package models
+package user
 
 import (
 	"errors"
 	"log"
+
+	"github.com/upspeak/upspeak/core"
 )
 
 /////////////////
@@ -15,17 +17,17 @@ insert into users (username, password, email_primary, created_at, is_active, dis
     returning id
 `
 
-// CreateUser returns a User given a username
-func CreateUser(user *User) (int64, error) {
+// Create creates a new user and returns the User ID
+func Create(user *core.User) (int64, error) {
 	var userID int64
 
-	passwordHash, err := GeneratePasswordHash(user.Password.String)
+	passwordHash, err := core.GeneratePasswordHash(user.Password.String)
 	if err != nil {
 		log.Println(err)
 		return 0, err
 	}
 
-	err = db.QueryRow(createUserQuery, &user.Username, &passwordHash, &user.EmailPrimary, &user.IsActive, &user.DisplayName, &user.IsVerified).Scan(&userID)
+	err = core.DB.QueryRow(createUserQuery, &user.Username, &passwordHash, &user.EmailPrimary, &user.IsActive, &user.DisplayName, &user.IsVerified).Scan(&userID)
 
 	if err != nil {
 		log.Println(err)
@@ -45,10 +47,10 @@ from users
     where username = $1;
 `
 
-// GetUser gets user metadata
-func GetUser(username *string) (User, error) {
-	var u User
-	err := db.QueryRow(getUserQuery, &username).Scan(
+// Get gets user metadata
+func Get(username *string) (core.User, error) {
+	var u core.User
+	err := core.DB.QueryRow(getUserQuery, &username).Scan(
 		&u.UserID, &u.Username, &u.EmailPrimary, &u.DisplayName, &u.CreatedAt,
 		&u.IsVerified, &u.IsActive,
 	)
@@ -72,10 +74,10 @@ where id = $2
     returning id;
 `
 
-// UpdateUser updates user metadata
-func UpdateUser(user *User) (int64, error) {
+// Update updates user metadata
+func Update(user *core.User) (int64, error) {
 	var userID int64
-	err := db.QueryRow(updateUserQuery, &user.DisplayName, &user.UserID).Scan(&userID)
+	err := core.DB.QueryRow(updateUserQuery, &user.DisplayName, &user.UserID).Scan(&userID)
 
 	if err != nil {
 		return userID, err
@@ -93,9 +95,9 @@ update users
 where id = $2;
 `
 
-// UpdateUserEmail updates user's email
-func UpdateUserEmail(email string, userID int64) (int64, error) {
-	res, err := db.Exec(updateUserEmailQuery, &email, &userID)
+// UpdateEmail updates user's email
+func UpdateEmail(email string, userID int64) (int64, error) {
+	res, err := core.DB.Exec(updateUserEmailQuery, &email, &userID)
 
 	if err != nil {
 		return userID, err
@@ -131,26 +133,26 @@ from users
 `
 
 // UpdatePassword updates the user's password
-func UpdateUserPassword(userID int64, oldPassword string, newPassword string) error {
+func UpdatePassword(userID int64, oldPassword string, newPassword string) error {
 	// Get old password
 	var oldPasswordHash string
-	err := db.QueryRow(getUserPasswordQuery, &userID).Scan(&userID, &oldPasswordHash)
+	err := core.DB.QueryRow(getUserPasswordQuery, &userID).Scan(&userID, &oldPasswordHash)
 	if err != nil {
 		return err
 	}
 
-	err = VerifyPasswordHash(oldPassword, oldPasswordHash)
+	err = core.VerifyPasswordHash(oldPassword, oldPasswordHash)
 	if err != nil {
 		return err
 	}
 
 	// Generate hash for new password
-	newPasswordHash, err := GeneratePasswordHash(newPassword)
+	newPasswordHash, err := core.GeneratePasswordHash(newPassword)
 	if err != nil {
 		return err
 	}
 
-	res, err := db.Exec(updateUserPasswordQuery, &newPasswordHash, &userID)
+	res, err := core.DB.Exec(updateUserPasswordQuery, &newPasswordHash, &userID)
 	if err != nil {
 		return err
 	}
@@ -177,8 +179,9 @@ where users.id = $2
     returning id;
 `
 
-func ToggleUserActivationStatus(userID int64, activationStatus bool) (int64, error) {
-	err := db.QueryRow(toggleUserActivationStatusQuery, &activationStatus, &userID).Scan(&userID)
+// Activate changes user activation status
+func Activate(userID int64, activationStatus bool) (int64, error) {
+	err := core.DB.QueryRow(toggleUserActivationStatusQuery, &activationStatus, &userID).Scan(&userID)
 
 	if err != nil {
 		return userID, err
@@ -198,8 +201,9 @@ where users.id = $2
     returning id;
 `
 
-func VerifyUser(userID int64, verificationStatus bool) (int64, error) {
-	err := db.QueryRow(verifyUserQuery, &verificationStatus, &userID).Scan(&userID)
+// Verify updates a user's verification status
+func Verify(userID int64, verificationStatus bool) (int64, error) {
+	err := core.DB.QueryRow(verifyUserQuery, &verificationStatus, &userID).Scan(&userID)
 
 	if err != nil {
 		return userID, err
@@ -217,6 +221,7 @@ var authenticateUserQuery = `
 
 `
 
-func AuthenticateUser() {
+// Authenticate attempts to authenticate a user. TODO.
+func Authenticate() {
 
 }

@@ -1,16 +1,15 @@
-// Reusable types used and exported by models.
+// Core types for Upspeak.
 //
 // These types are created with these goals:
 //
-// - Use composite types in models - complex types are composed of simple types.
+// - Use composite types - complex types are composed of simple types.
 //   See `Node` below for example.
-// - Functions in the models package:
+// - The rest of the core package should:
 //    - return these types or any primitive type
 //    - accept arguments of these types or use primitive types
-//    - do not modify/mutate their arguments; return new copies or instances of a relevant type
 //    - can be combined by higher order functions to produce extended outputs
 
-package models
+package core
 
 // NodeAuthor represents author of a specific node or its edits
 type NodeAuthor struct {
@@ -55,7 +54,8 @@ type NodeMeta struct {
 	UpdatedBy NodeAuthor `json:"updated_by,omitempty"`
 }
 
-func newNodeMeta() NodeMeta {
+// NewNodeMeta generates an empty NodeMeta by setting default values
+func NewNodeMeta() NodeMeta {
 	var n NodeMeta
 	n.CreatedBy = NodeAuthor{}
 	return n
@@ -71,7 +71,8 @@ type NodeRevision struct {
 	Data NodeData `json:"data,omitempty"`
 }
 
-func newNodeRevision() NodeRevision {
+// NewNodeRevision creates an empty NodeRevision by setting default values
+func NewNodeRevision() NodeRevision {
 	var r NodeRevision
 	r.Author = NodeAuthor{}
 	r.Data = NodeData{}
@@ -98,10 +99,10 @@ type Node struct {
 	Revisions []*NodeRevision `json:"revisions,omitempty"`
 }
 
-// newNode returns an empty `Node` type which can be used to fill data
-func newNode() Node {
+// NewNode returns an empty `Node` type which can be used to fill data
+func NewNode() Node {
 	var n Node
-	n.Meta = newNodeMeta()
+	n.Meta = NewNodeMeta()
 	n.Data = NodeData{}
 	return n
 }

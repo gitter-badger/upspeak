@@ -1,9 +1,11 @@
-package models
+package node
 
 import (
 	"database/sql"
 	"log"
 	"time"
+
+	"github.com/upspeak/upspeak/core"
 )
 
 ///////////////////////
@@ -21,10 +23,10 @@ from audit.node_revisions r
 where r.node_id = $1 and r.created_at = $2;
 `
 
-// GetNodeRevision gets a node revision using node ID and timestamp of revision
-func GetNodeRevision(nodeID int64, createdAt time.Time) (NodeRevision, error) {
-	r := newNodeRevision()
-	err := db.QueryRow(getNodeRevisionQuery, nodeID, createdAt).Scan(
+// Revision gets a single node revision using node ID and timestamp of revision
+func Revision(nodeID int64, createdAt time.Time) (core.NodeRevision, error) {
+	r := core.NewNodeRevision()
+	err := core.DB.QueryRow(getNodeRevisionQuery, nodeID, createdAt).Scan(
 		&r.Author.UserID, &r.Author.Username,
 		&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
 		&r.CreatedAt,
@@ -54,19 +56,19 @@ where r.node_id = $1
 order by r.created_at desc; -- latest first
 `
 
-// GetNodeRevisions gets node revisions
-func GetNodeRevisions(nodeID int64) ([]NodeRevision, error) {
-	rows, err := db.Query(getNodeRevisionsQuery, nodeID)
+// Revisions gets node revisions
+func Revisions(nodeID int64) ([]core.NodeRevision, error) {
+	rows, err := core.DB.Query(getNodeRevisionsQuery, nodeID)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
 
-	nodeRevisions := make([]NodeRevision, 0)
+	nodeRevisions := make([]core.NodeRevision, 0)
 
 	for rows.Next() {
-		r := newNodeRevision()
+		r := core.NewNodeRevision()
 		err := rows.Scan(
 			&r.Author.UserID, &r.Author.Username,
 			&r.Data.DataType, &r.Data.Subject, &r.Data.Body, &r.Data.RichData,
@@ -101,10 +103,10 @@ where id = $5
 returning updated_at;
 `
 
-// NodeAddRevision updates the contents of a node and internally creates a new revision
-func NodeAddRevision(nodeID NullInt64, authorID NullInt64, data *NodeData) (NodeRevision, error) {
-	r := newNodeRevision()
-	err := db.QueryRow(
+// NewRevision updates the contents of a node and internally creates a new revision
+func NewRevision(nodeID core.NullInt64, authorID core.NullInt64, data *core.NodeData) (core.NodeRevision, error) {
+	r := core.NewNodeRevision()
+	err := core.DB.QueryRow(
 		nodeAddRevisionQuery,
 		&data.Subject, &data.Body, &data.RichData, &authorID, &nodeID,
 	).Scan(&r.CreatedAt)
@@ -113,7 +115,7 @@ func NodeAddRevision(nodeID NullInt64, authorID NullInt64, data *NodeData) (Node
 		log.Println(err)
 		return r, err
 	}
-	r.Author = NodeAuthor{
+	r.Author = core.NodeAuthor{
 		UserID: authorID,
 	}
 	return r, nil

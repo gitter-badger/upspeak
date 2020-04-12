@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/upspeak/upspeak/cmd"
-	"github.com/upspeak/upspeak/models"
+	"github.com/upspeak/upspeak/core"
 )
 
 func main() {
 	c := cmd.InitConfig()
-	models.ConnectDB(c.GetString("PostgresURL"))
+	core.ConnectDB(c.GetString("PostgresURL"))
 }

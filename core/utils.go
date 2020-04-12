@@ -1,4 +1,4 @@
-package models
+package core
 
 import (
 	"bytes"
@@ -14,9 +14,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Postgres' JSONB type. It's a byte array of already encoded JSON (like json.RawMessage)
+// JSONB is used for Postgres' JSONB type. It's a byte array of already encoded JSON (like json.RawMessage)
 type JSONB []byte
 
+// Value implements sql/driver.Value for JSONB
 func (j JSONB) Value() (driver.Value, error) {
 	if j.IsNull() {
 		return nil, nil
@@ -24,6 +25,7 @@ func (j JSONB) Value() (driver.Value, error) {
 	return string(j), nil
 }
 
+// Scan implements value scanning for JSONB
 func (j *JSONB) Scan(value interface{}) error {
 	if value == nil {
 		*j = nil
@@ -55,10 +57,12 @@ func (j *JSONB) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// IsNull provides an utility method to check if the value is `null`
 func (j JSONB) IsNull() bool {
 	return len(j) == 0 || string(j) == "null"
 }
 
+// Equals compares a JSONB with another JSONB using equality of bytes
 func (j JSONB) Equals(j1 JSONB) bool {
 	return bytes.Equal([]byte(j), []byte(j1))
 }

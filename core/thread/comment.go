@@ -1,7 +1,9 @@
-package models
+package thread
 
 import (
 	"log"
+
+	"github.com/upspeak/upspeak/core"
 )
 
 ////////////////////
@@ -19,10 +21,10 @@ values ($1, $2, $3, $4, $5, $6, $7, now())
 returning id;
 `
 
-// CreateComment creates a comment and returns the new node ID
-func CreateComment(data NodeData, threadID int64, authorID int64, inReplyToID int64) (int64, error) {
+// AddComment creates a comment and returns the new node ID
+func AddComment(data core.NodeData, threadID int64, authorID int64, inReplyToID int64) (int64, error) {
 	var nodeID int64
-	err := db.QueryRow(
+	err := core.DB.QueryRow(
 		createCommentQuery,
 		authorID, threadID, inReplyToID,
 		data.DataType, data.Subject, data.Body, data.RichData,
