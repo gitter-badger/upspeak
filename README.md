@@ -1,6 +1,6 @@
 # Upspeak
 
-A real-time, distributed, and contextual discussion platform built on Matrix.
+A real-time capable, distributed, and contextual discussion platform built on Matrix. Upspeak is an IM client, forum, feed reader, blog, and wiki, with which you can save data where _you_ want. Think GitHub for information, Notion for API integrations, and Kindle for reading information those information.
 
 Upspeak aims to be a natural discussion and knowledge sharing system that enables [discussions based on context](context.md) (or, maintains context of all conversations), seamlessly blends synchronous and asynchronous communication modes, and provides a distraction-free experience.
 
