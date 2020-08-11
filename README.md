@@ -43,6 +43,7 @@ It will try to blend synchronous and asynchronous communication modes, and a foc
 
 ## Further reading
 
+- [On context][_context]
 - [Focus areas][_focus]
 - [Hypothesis][_hypo]
 - [Data model][_model]
