@@ -2,7 +2,7 @@
 
 Cloud-native, contextual reader, writer, archiver, and annotator built for individuals. Lets users connect multiple web-based sources into self-updating book like interfaces. Wants to work with Discourse, Matrix, and GitHub Issues.
 
-![Project status: Experimental](https://img.shields.io/badge/status-experimental-red) ![Chat on Matrix at +upspeak@matrix.org](https://img.shields.io/matrix/upspeak:matrix.org)
+![Project status: Experimental](https://img.shields.io/badge/status-experimental-red) [![Chat on Matrix at +upspeak@matrix.org](https://img.shields.io/matrix/upspeak:matrix.org)](https://app.element.io/#/room/#upspeak:matrix.org)
 
 ## Goal
 
