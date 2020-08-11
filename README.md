@@ -37,9 +37,9 @@ This idea of data ownership is contained in the concept of _“Repository”_. A
 
 ## In short
 
-Upspeak will be a real-time capable, distributed, and [contextual][_context] discussion platform built on Matrix. Upspeak is an IM client, forum, feed reader, blog, and wiki, with which you can save data where /_users_/ want.
+Upspeak will be a client for Matrix, Discourse, feeds, blogs, and wikis, with which users can save their data where they want.
 
-It will try to blend synchronous and asynchronous communication modes, and a distraction-free experience.
+It will try to blend synchronous and asynchronous communication modes, and a focus on distraction-free experience.
 
 ## Further reading
 
