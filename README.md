@@ -8,7 +8,7 @@ Cloud-native, contextual reader, writer, archiver, and annotator built for indiv
 
 Upspeak aims to provide simple tools to build information archives, aka, repositories. These repositories can gather data from (or, proxy for us in) places on the web, practically any system accessible over HTTP. It will then let us annotate the data, and (if we want it to) send replies back, all within their contexts.
 
-It *integrates* with tools that we already use to consume or create information in multiple (often shared) contexts, and unifies them in a common context which it can replicate continuously from &/ to any of these places:
+It will integrate with tools that we already use to consume or create information in multiple (often shared) contexts. It will be able to replicate continuously from and/or to any of these places:
 
 * *Issue queues*: GitHub Issues, GitLab Issues, Bugzilla
 * *Forums*: Discourse, Reddit
@@ -17,13 +17,15 @@ It *integrates* with tools that we already use to consume or create information 
 * *Publications*: Medium, Wordpress
 * *Text editor/Notepads*: Bear, VS Code, Emacs Org-mode
 
-Think of it as a library of self-updating books, each representing an archive of online publications, or happenings of online communities you [may] [want to] participate in.
+Think of Upspeak as a personal library of self-updating books, each representing an archive of online publications, or happenings of online communities you (may) (want to) participate in.
 
 > Editor’s note: Upspeak has matured as a thought over the years through close observation of how services like GitHub, Kindle, and Bear take cognitive load away.]
 
 ## Data ownership
 
-Every user owns and controls their own data. Upspeak behaves like a domain-specific user-agent for browsing and archiving parts of the ephemeral [or complex] web. I in providing just the right support through tooling that humans [like me] would like to set up in their environment of choice easily, and go, “aah”. Your data where you want.
+Every user owns and controls their own data. Upspeak behaves like a domain-specific user-agent for accessing and archiving parts of the ephemeral web.
+
+ Upspeak will provide the right balance of tools to run it locally, as well as, deploy to a cloud provider.
 
 This idea of data ownership is contained in the concept of _“Repository”_. A repository, for Upspeak, is a collection of documents, which you can mutate manually, &/:
 
